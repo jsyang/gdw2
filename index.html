@@ -1,0 +1,21 @@
+<html>
+<title>game</title>
+<script>
+    if(window.location.origin.indexOf('file://')!=-1) {
+        // Loaded this file from Finder / shell script. Reload from local webserver.
+        window.location.href = 'http://localhost:8080';
+    }
+</script>
+
+<body><canvas></canvas></body>
+
+<script src="lib/require.js"></script>
+<script>
+  require.config({
+    paths : {
+      'text' : 'lib/text'
+    }
+  });
+  require(['core/init']);
+</script>
+</html>

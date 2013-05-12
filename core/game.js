@@ -5,6 +5,10 @@ define(['core/placetiles'], function(placeTiles) {
   var Kulami, MoveTile;
   MoveTile = (function() {
 
+    MoveTile.prototype.BORDERSIZE = 4;
+
+    MoveTile.prototype.BORDERSIZE_ = 0.25;
+
     MoveTile.prototype.CELLSIZE = 32;
 
     MoveTile.prototype.size = null;
@@ -24,31 +28,30 @@ define(['core/placetiles'], function(placeTiles) {
     };
 
     MoveTile.prototype.draw = function() {
-      var cx, cy, h, i, j, w, x, y, _i, _ref, _results;
+      var cx, cy, h, i, j, w, x, y, _h, _i, _j, _ref, _ref1, _ref2, _w;
       if (this.transposeOrientation) {
-
+        _ref = [this.h, this.w], _w = _ref[0], _h = _ref[1];
       } else {
-        _results = [];
-        for (j = _i = 0, _ref = this.h; 0 <= _ref ? _i < _ref : _i > _ref; j = 0 <= _ref ? ++_i : --_i) {
-          _results.push((function() {
-            var _j, _ref1, _ref2, _results1;
-            _results1 = [];
-            for (i = _j = 0, _ref1 = this.w; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
-              _ref2 = [this.x + this.CELLSIZE * i, this.y + this.CELLSIZE * j, this.CELLSIZE, this.CELLSIZE, this.x + this.CELLSIZE * i + this.CELLSIZE * 0.5, this.y + this.CELLSIZE * j + this.CELLSIZE * 0.5], x = _ref2[0], y = _ref2[1], w = _ref2[2], h = _ref2[3], cx = _ref2[4], cy = _ref2[5];
-              atom.context.fillStyle = '#abc';
-              atom.context.fillRect(x, y, w, h);
-              atom.context.strokeRect(x, y, w, h);
-              atom.context.fillStyle = '#789';
-              atom.context.beginPath();
-              atom.context.arc(cx, cy, 12, 0, 2 * Math.PI, true);
-              atom.context.fill();
-              _results1.push(atom.context.stroke());
-            }
-            return _results1;
-          }).call(this));
-        }
-        return _results;
+        _ref1 = [this.w, this.h], _w = _ref1[0], _h = _ref1[1];
       }
+      atom.context.lineWidth = 2;
+      atom.context.strokeStyle = '#999';
+      for (j = _i = 0; 0 <= _h ? _i < _h : _i > _h; j = 0 <= _h ? ++_i : --_i) {
+        for (i = _j = 0; 0 <= _w ? _j < _w : _j > _w; i = 0 <= _w ? ++_j : --_j) {
+          _ref2 = [this.x + this.CELLSIZE * i, this.y + this.CELLSIZE * j, this.CELLSIZE, this.CELLSIZE, this.x + this.CELLSIZE * i + this.CELLSIZE * 0.5, this.y + this.CELLSIZE * j + this.CELLSIZE * 0.5], x = _ref2[0], y = _ref2[1], w = _ref2[2], h = _ref2[3], cx = _ref2[4], cy = _ref2[5];
+          atom.context.fillStyle = '#abc';
+          atom.context.fillRect(x, y, w, h);
+          atom.context.strokeRect(x, y, w, h);
+          atom.context.fillStyle = '#789';
+          atom.context.beginPath();
+          atom.context.arc(cx, cy, 8, 0, 2 * Math.PI, true);
+          atom.context.fill();
+          atom.context.stroke();
+        }
+      }
+      atom.context.strokeStyle = '#000';
+      atom.context.lineWidth = this.BORDERSIZE;
+      return atom.context.strokeRect(this.x + this.BORDERSIZE_ + 1, this.y + this.BORDERSIZE_ + 1, _w * this.CELLSIZE - this.BORDERSIZE + 2, _h * this.CELLSIZE - this.BORDERSIZE + 2);
     };
 
     function MoveTile(params) {
@@ -95,6 +98,8 @@ define(['core/placetiles'], function(placeTiles) {
     };
 
     Kulami.prototype.user = {
+      lastClick: 0,
+      lastTile: null,
       tile: null,
       mouseOffset: {
         x: 0,
@@ -104,17 +109,31 @@ define(['core/placetiles'], function(placeTiles) {
 
     Kulami.prototype.mode = {
       current: 'select',
-      select: function() {
+      select: function(dt) {
         if (atom.input.down('mouseleft') && this.findTile()) {
-          return this.mode.current = 'move';
+          if (this.user.lastTile === this.user.tile && this.user.lastClick < 0.3) {
+            console.log(dt, this.user.lastClick);
+            this.user.tile.transposeOrientation ^= true;
+            atom.playSound('drop');
+            this.user.lastTile = null;
+          } else {
+            this.user.lastClick = 0;
+            this.mode.current = 'move';
+            this.user.lastTile = this.user.tile;
+            atom.playSound('pick');
+          }
         }
+        return this.user.lastClick += dt;
       },
-      move: function() {
+      move: function(dt) {
         if (atom.input.released('mouseleft') && (this.user.tile != null)) {
+          this.user.lastClick = 0;
           this.mode.current = 'select';
           this.user.tile.x = 32 * Math.round(this.user.tile.x * 0.03125);
-          return this.user.tile.y = 32 * Math.round(this.user.tile.y * 0.03125);
+          this.user.tile.y = 32 * Math.round(this.user.tile.y * 0.03125);
+          return atom.playSound('drop');
         } else {
+          this.user.lastClick += dt;
           this.user.tile.x = atom.input.mouse.x - this.user.mouseOffset.x;
           return this.user.tile.y = atom.input.mouse.y - this.user.mouseOffset.y;
         }
@@ -148,8 +167,10 @@ define(['core/placetiles'], function(placeTiles) {
       atom.input.bind(atom.button.LEFT, 'mouseleft');
     }
 
+    Kulami.prototype.checkNoOverlap = function() {};
+
     Kulami.prototype.update = function(dt) {
-      return this.mode[this.mode.current].apply(this);
+      return this.mode[this.mode.current].apply(this, [dt]);
     };
 
     Kulami.prototype.draw = function() {

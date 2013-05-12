@@ -181,7 +181,7 @@ define(function() {
     Game.prototype.step = function() {
       var dt, now;
       now = Date.now();
-      dt = (now - this.last_step) / 1000;
+      dt = (now - this.last_step) * 0.001;
       this.last_step = now;
       this.update(dt);
       this.draw();

@@ -26,7 +26,9 @@ define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
     return isPreloadComplete();
   });
   atom.preloadSounds({
-    crack: 'crack.mp3'
+    crack: 'crack.mp3',
+    pick: 'pick.mp3',
+    drop: 'drop.mp3'
   }, function() {
     loaded.sfx = true;
     return isPreloadComplete();

@@ -146,7 +146,7 @@ define ->
       @running = false
     step: ->
       now = Date.now()
-      dt = (now - @last_step) / 1000
+      dt = (now - @last_step) * 0.001
       @last_step = now
       @update dt
       @draw()

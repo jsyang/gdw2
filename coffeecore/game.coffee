@@ -5,14 +5,15 @@ define [
   CELLSIZE = 32
   
   class MoveTile
-    BORDERSIZE  : 4
-    BORDERSIZE_ : 0.25
-    CELLSIZE    : CELLSIZE
-    size        : null
-    x           : 0
-    y           : 0
-    w           : 1
-    h           : 1
+    BORDERSIZE        : 4
+    BORDERSIZE_       : 0.25
+    CELLSIZE          : CELLSIZE
+    size              : null
+    x                 : 0
+    y                 : 0
+    w                 : 1
+    h                 : 1
+    invalidPlacement  : true
     
     transposeOrientation : ->
       [_w,_h] = [@w,@h]
@@ -25,7 +26,12 @@ define [
     
     draw : ->
       atom.context.lineWidth    = 2
-      atom.context.strokeStyle  = '#999'
+      
+      if @invalidPlacement
+        atom.context.strokeStyle  = '#a99'
+      else
+        atom.context.strokeStyle  = '#999'
+        
       
       for j in [0...@h]
         for i in [0...@w]
@@ -38,12 +44,20 @@ define [
             @y+@CELLSIZE*j + @CELLSIZE*0.5
           ]
           
-          atom.context.fillStyle = '#abc'
+          if @invalidPlacement
+            atom.context.fillStyle = '#dbc'
+          else
+            atom.context.fillStyle = '#abc'
+            
           
           atom.context.fillRect(x, y, w, h)
           atom.context.strokeRect(x, y, w, h)
           
-          atom.context.fillStyle = '#789'
+          if @invalidPlacement
+            atom.context.fillStyle = '#a89'
+          else
+            atom.context.fillStyle = '#789'
+          
           atom.context.beginPath()
           
           atom.context.arc(cx, cy, 8, 0, 2*Math.PI, true)
@@ -51,7 +65,11 @@ define [
           atom.context.stroke()
       
       # draw bold outline!
-      atom.context.strokeStyle  = '#000'
+      if @invalidPlacement
+        atom.context.strokeStyle  = '#500'
+      else
+        atom.context.strokeStyle  = '#000'
+        
       atom.context.lineWidth    = @BORDERSIZE
       atom.context.strokeRect(@x+@BORDERSIZE_+1, @y+@BORDERSIZE_+1, @w*@CELLSIZE-@BORDERSIZE+2, @h*@CELLSIZE-@BORDERSIZE+2)
     
@@ -79,28 +97,42 @@ define [
       maxY  = 0
       
       for t in @tiles
-        if t.x < minX then minX = t.x
-        if t.y < minY then minY = t.y
+        if (t.x>>5) < minX then minX = t.x>>5
+        if (t.y>>5) < minY then minY = t.y>>5
         
-        if t.x+t.w > maxX then maxX = t.x+t.w
-        if t.y+t.h > maxY then maxY = t.y+t.h
+        if (t.x>>5)+t.w > maxX then maxX = (t.x>>5) + t.w
+        if (t.y>>5)+t.h > maxY then maxY = (t.y>>5) + t.h
 
       @user.layout.x  = minX
       @user.layout.y  = minY
       @user.layout.bx = maxX
       @user.layout.by = maxY
+      
+      console.log(
+        @user.layout.x,
+        @user.layout.y, 
+        @user.layout.bx,
+        @user.layout.by,
+        minX,
+        maxX,
+        minY,
+        maxY
+      )
     
     verifyLayoutValid : ->
       @getLayoutOrigin()
-      layout = ( 0 for i in [0...(@user.layout.bx>>5)*(@user.layout.by>>5)] )
-
+      layout = ( 0 for i in [0...(@user.layout.bx+1)*(@user.layout.by+1)] )
       for t in @tiles
-        for y in [t.y>>5...(t.y>>5)+t.h]
-          for x in [t.x>>5...(t.x>>5)+t.w]
-            layout[y*(@user.layout.bx>>5) + x]++
-            if layout[y*(@user.layout.bx>>5) + x] > 1
+        minX = @user.layout.x + (t.x>>5)
+        minY = @user.layout.y + (t.y>>5)
+        for y in [0...t.h]
+          for x in [0...t.w]
+            layout[(minY+y)*@user.layout.bx + (minX+x)]++
+            if layout[(minY+y)*@user.layout.bx + (minX+x)] > 1
+              t.invalidPlacement = true
               return false
-
+        t.invalidPlacement = false
+      console.log('----'+layout)
       return true
       
     

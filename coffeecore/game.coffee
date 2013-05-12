@@ -25,12 +25,14 @@ define [
     
     
     draw : ->
-      atom.context.lineWidth    = 2
+      ac = atom.context
+    
+      ac.lineWidth    = 2
       
       if @invalidPlacement
-        atom.context.strokeStyle  = '#a99'
+        ac.strokeStyle  = '#a99'
       else
-        atom.context.strokeStyle  = '#999'
+        ac.strokeStyle  = '#999'
         
       
       for j in [0...@h]
@@ -45,33 +47,33 @@ define [
           ]
           
           if @invalidPlacement
-            atom.context.fillStyle = '#dbc'
+            ac.fillStyle = '#dbc'
           else
-            atom.context.fillStyle = '#abc'
+            ac.fillStyle = '#abc'
             
           
-          atom.context.fillRect(x, y, w, h)
-          atom.context.strokeRect(x, y, w, h)
+          ac.fillRect(x, y, w, h)
+          ac.strokeRect(x, y, w, h)
           
           if @invalidPlacement
-            atom.context.fillStyle = '#a89'
+            ac.fillStyle = '#a89'
           else
-            atom.context.fillStyle = '#789'
+            ac.fillStyle = '#789'
           
-          atom.context.beginPath()
+          ac.beginPath()
           
-          atom.context.arc(cx, cy, 8, 0, 2*Math.PI, true)
-          atom.context.fill()
-          atom.context.stroke()
+          ac.arc(cx, cy, 8, 0, 2*Math.PI, true)
+          ac.fill()
+          ac.stroke()
       
       # draw bold outline!
       if @invalidPlacement
-        atom.context.strokeStyle  = '#500'
+        ac.strokeStyle  = '#500'
       else
-        atom.context.strokeStyle  = '#000'
+        ac.strokeStyle  = '#000'
         
-      atom.context.lineWidth    = @BORDERSIZE
-      atom.context.strokeRect(@x+@BORDERSIZE_+1, @y+@BORDERSIZE_+1, @w*@CELLSIZE-@BORDERSIZE+2, @h*@CELLSIZE-@BORDERSIZE+2)
+      ac.lineWidth    = @BORDERSIZE
+      ac.strokeRect(@x+@BORDERSIZE_+1, @y+@BORDERSIZE_+1, @w*@CELLSIZE-@BORDERSIZE+2, @h*@CELLSIZE-@BORDERSIZE+2)
     
     constructor : (params) ->
       @[k] = v for k, v of params
@@ -94,9 +96,25 @@ define [
     w : 0
     h : 0
     
-    draw : ->
+    containsPoint : (x,y) ->
+      return ( @x <= x <= @x+@w ) and ( @y <= y <= @y+@h )
     
-    constructor : ->
+    state : 'up'
+    
+    color :
+      pressed : '#b00'
+      up      : '#f00'
+    
+    draw : ->
+      ac = atom.context
+      ac.lineWidth    = 2
+      ac.strokeStyle  = '#111'
+      ac.fillStyle  = @color[@state]
+      ac.fillRect(@x, @y, @w, @h)
+      ac.strokeRect(@x, @y, @w, @h)
+      
+      
+    constructor : (params) ->
       @[k] = v for k, v of params
     
     
@@ -121,17 +139,6 @@ define [
       @user.layout.bx = maxX
       @user.layout.by = maxY
       
-      #console.log(
-      #  @user.layout.x,
-      #  @user.layout.y, 
-      #  @user.layout.bx,
-      #  @user.layout.by,
-      #  minX,
-      #  maxX,
-      #  minY,
-      #  maxY
-      #)
-      #
     verifyLayoutValid : ->
       @getLayoutOrigin()
       layout = ( 0 for i in [0...(@user.layout.bx+1)*(@user.layout.by+1)] )
@@ -148,21 +155,33 @@ define [
       return true
       
     
-    findTile : ->
+    findUIThing : (thingType) ->
       mx = atom.input.mouse.x
       my = atom.input.mouse.y
-      for t in @tiles
-        if t.containsPoint(mx, my)
-          @user.tile = t
-          @user.mouseOffset.x = mx - t.x
-          @user.mouseOffset.y = my - t.y 
-          return true
+      
+      switch thingType
+        when 'tiles'
+          for t in @tiles
+            if t.containsPoint(mx, my)
+              @user.tile = t
+              @user.mouseOffset.x = mx - t.x
+              @user.mouseOffset.y = my - t.y
+              return true
+      
+        when 'buttons'
+          for k,v of @buttons
+            if v.containsPoint(mx, my)
+              @user.lastButton = v
+              return true
+          @user.lastButton = null
+      
       false
       
     user :
-      lastClick : 0
-      lastTile  : null     
-      tile      : null
+      lastClick   : 0
+      lastButton  : null
+      lastTile    : null     
+      tile        : null
       layout    :
         x   : 0
         y   : 0
@@ -175,22 +194,34 @@ define [
     mode :
       current : 'select'
 
+      play : (dt) ->
+        if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
+          atom.playSound('crack')
+      
       select : (dt) ->
-        if (atom.input.down('touchfinger') or atom.input.down('mouseleft')) and @findTile()
-          # double click to change orientation
-          if @user.lastTile is @user.tile and @user.lastClick < 0.3
-            @user.tile.transposeOrientation()
-            atom.playSound('drop')
-            @user.lastTile = null
+        if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
+        
+          if @findUIThing('tiles')
+            # double click to change orientation
+            if @user.lastTile is @user.tile and @user.lastClick < 0.3
+              @user.tile.transposeOrientation()
+              atom.playSound('drop')
+              @user.lastTile = null
             
-          else
-            @user.lastClick = 0
-            @mode.current = 'move'
-            @user.lastTile = @user.tile
-            atom.playSound('pick')
-             
-        @user.lastClick += dt
-                      
+              
+            else
+              @user.lastClick = 0
+              @mode.current = 'move'
+              @user.lastTile = @user.tile
+              atom.playSound('pick')
+            
+          @user.lastClick += dt  
+        
+        if (atom.input.released('touchfinger') or atom.input.released('mouseleft'))
+          if @findUIThing('buttons')
+            atom.playSound('drop')
+            @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
+            
       move : (dt) ->
         if (atom.input.released('touchfinger') or atom.input.released('mouseleft')) and @user.tile?
           # dropped
@@ -200,19 +231,54 @@ define [
           @user.tile.y = 32*Math.round(@user.tile.y * 0.03125)
           atom.playSound('drop')
           
-          @verifyLayoutValid()
+          if @verifyLayoutValid() is true
+            @triggers.enablestartbutton.call(@)
+          else
+            @triggers.disablestartbutton.call(@)
           
         else
           @user.lastClick += dt
           @user.tile.x = atom.input.mouse.x - @user.mouseOffset.x
           @user.tile.y = atom.input.mouse.y - @user.mouseOffset.y
     
+    triggers :
+      removestartbutton : ->
+        b = @buttons.start
+        if b?
+          delete @buttons.start
+          
+      enablestartbutton : ->
+        b = @buttons.start
+        if b?
+          b.color =
+            pressed : '#0a0'
+            up      : '#3e8'
+          b.clicked = 'startgame'
+        
+      disablestartbutton : ->
+        b = @buttons.start
+        if b?
+          b.color =
+            pressed : '#0a0'
+            up      : '#aeb'
+          b.clicked = null
+        
+      startgame : ->
+        @mode.current = 'play'
+        @triggers.removestartbutton.call(@)
     
     tiles : []
     
     buttons :
       start : new Button({
-        
+        x : atom.width - 100
+        y : 20
+        w : 80
+        h : 80
+        clicked : null
+        color :
+          pressed : '#0a0'
+          up : '#3e8'
       })
     
     constructor : ->
@@ -235,11 +301,12 @@ define [
     
       atom.input.bind(atom.button.LEFT, 'mouseleft')
       atom.input.bind(atom.touch.TOUCHING, 'touchfinger')
-    
-    
+  
+      
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])
     
     draw : ->
       atom.context.clear()
       t.draw() for t in @tiles
+      v.draw() for k,v of @buttons

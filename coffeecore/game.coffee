@@ -108,17 +108,17 @@ define [
       @user.layout.bx = maxX
       @user.layout.by = maxY
       
-      console.log(
-        @user.layout.x,
-        @user.layout.y, 
-        @user.layout.bx,
-        @user.layout.by,
-        minX,
-        maxX,
-        minY,
-        maxY
-      )
-    
+      #console.log(
+      #  @user.layout.x,
+      #  @user.layout.y, 
+      #  @user.layout.bx,
+      #  @user.layout.by,
+      #  minX,
+      #  maxX,
+      #  minY,
+      #  maxY
+      #)
+      #
     verifyLayoutValid : ->
       @getLayoutOrigin()
       layout = ( 0 for i in [0...(@user.layout.bx+1)*(@user.layout.by+1)] )
@@ -132,7 +132,6 @@ define [
               t.invalidPlacement = true
               return false
         t.invalidPlacement = false
-      console.log('----'+layout)
       return true
       
     
@@ -164,7 +163,7 @@ define [
       current : 'select'
 
       select : (dt) ->
-        if atom.input.down('mouseleft') and @findTile()
+        if (atom.input.down('touchfinger') or atom.input.down('mouseleft')) and @findTile()
           # double click to change orientation
           if @user.lastTile is @user.tile and @user.lastClick < 0.3
             @user.tile.transposeOrientation()
@@ -176,21 +175,19 @@ define [
             @mode.current = 'move'
             @user.lastTile = @user.tile
             atom.playSound('pick')
-        
-        else
-          # check overall correctness of layout
-          
+             
         @user.lastClick += dt
                       
       move : (dt) ->
-        if atom.input.released('mouseleft') and @user.tile?
+        if (atom.input.released('touchfinger') or atom.input.released('mouseleft')) and @user.tile?
           # dropped
           @user.lastClick = 0
           @mode.current = 'select'
           @user.tile.x = 32*Math.round(@user.tile.x * 0.03125)
           @user.tile.y = 32*Math.round(@user.tile.y * 0.03125)
           atom.playSound('drop')
-          console.log(@verifyLayoutValid())
+          
+          @verifyLayoutValid()
           
         else
           @user.lastClick += dt
@@ -218,12 +215,9 @@ define [
       
       ( makeTile(k) for i in [0...v] ) for k,v of tileList
     
-      atom.input.bind atom.button.LEFT, 'mouseleft'
+      atom.input.bind(atom.button.LEFT, 'mouseleft')
+      atom.input.bind(atom.touch.TOUCHING, 'touchfinger')
     
-    
-    checkNoOverlap : ->
-      #min
-      #for 
     
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])

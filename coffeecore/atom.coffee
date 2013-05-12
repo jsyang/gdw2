@@ -55,6 +55,19 @@ define ->
     down:     (action) -> @_down[action]
     released: (action) -> (action in @_released)
   
+    ontouchmove: (e) ->
+      # jsyang: only grab the first finger for now
+      @mouse.x = e.changedTouches[0].pageX
+      @mouse.y = e.changedTouches[0].pageY
+    ontouchstart: (e) ->
+      @mouse.x = e.changedTouches[0].pageX
+      @mouse.y = e.changedTouches[0].pageY
+      @onkeydown(e)
+    ontouchend: (e) ->
+      @mouse.x = e.changedTouches[0].pageX
+      @mouse.y = e.changedTouches[0].pageY
+      @onkeyup(e)
+  
     onmousemove: (e) ->
       @mouse.x = e.pageX
       @mouse.y = e.pageY
@@ -63,16 +76,22 @@ define ->
     onmousewheel: (e) ->
       @onkeydown e
       @onkeyup e
+      
     oncontextmenu: (e) ->
       if @_bindings[atom.button.RIGHT]
         e.stopPropagation()
         e.preventDefault()
   }
   
-  document.onkeydown  = atom.input.onkeydown.bind(atom.input)
-  document.onkeyup    = atom.input.onkeyup.bind(atom.input)
-  document.onmouseup  = atom.input.onmouseup.bind(atom.input)
+  document.onkeydown      = atom.input.onkeydown.bind(atom.input)
+  document.onkeyup        = atom.input.onkeyup.bind(atom.input)
+  document.onmouseup      = atom.input.onmouseup.bind(atom.input)
+  document.ontouchend     = atom.input.ontouchend.bind(atom.input)
+  document.ontouchcancel  = atom.input.ontouchend.bind(atom.input)
+  document.ontouchleave   = atom.input.ontouchend.bind(atom.input)
   
+  atom.touch =
+    TOUCHING: 1000
   atom.button =
     LEFT: -1
     MIDDLE: -2
@@ -105,6 +124,8 @@ define ->
         atom.button.WHEELUP
       else
         atom.button.WHEELDOWN
+    else if e.type == 'touchstart' or e.type == 'touchend' or e.type == 'touchcancel' or e.type == 'touchleave'
+      atom.touch.TOUCHING
   
   atom.canvas = document.getElementsByTagName('canvas')[0]
   atom.canvas.style.position = "absolute"
@@ -112,6 +133,12 @@ define ->
   atom.canvas.style.left = "0"
   atom.context = atom.canvas.getContext '2d'
   atom.context.clear = -> @clearRect(0,0,atom.width,atom.height)
+  
+  atom.canvas.ontouchstart    = atom.input.ontouchstart.bind(atom.input)
+  atom.canvas.ontouchmove     = atom.input.ontouchmove.bind(atom.input)
+  atom.canvas.ontouchend      = atom.input.ontouchend.bind(atom.input)
+  atom.canvas.ontouchcancel   = atom.input.ontouchend.bind(atom.input)
+  atom.canvas.ontouchleave    = atom.input.ontouchend.bind(atom.input)
   
   atom.canvas.onmousemove     = atom.input.onmousemove.bind(atom.input)
   atom.canvas.onmousedown     = atom.input.onmousedown.bind(atom.input)

@@ -124,8 +124,7 @@ define(['core/placetiles'], function(placeTiles) {
       this.user.layout.x = minX;
       this.user.layout.y = minY;
       this.user.layout.bx = maxX;
-      this.user.layout.by = maxY;
-      return console.log(this.user.layout.x, this.user.layout.y, this.user.layout.bx, this.user.layout.by, minX, maxX, minY, maxY);
+      return this.user.layout.by = maxY;
     };
 
     Kulami.prototype.verifyLayoutValid = function() {
@@ -155,7 +154,6 @@ define(['core/placetiles'], function(placeTiles) {
         }
         t.invalidPlacement = false;
       }
-      console.log('----' + layout);
       return true;
     };
 
@@ -195,7 +193,7 @@ define(['core/placetiles'], function(placeTiles) {
     Kulami.prototype.mode = {
       current: 'select',
       select: function(dt) {
-        if (atom.input.down('mouseleft') && this.findTile()) {
+        if ((atom.input.down('touchfinger') || atom.input.down('mouseleft')) && this.findTile()) {
           if (this.user.lastTile === this.user.tile && this.user.lastClick < 0.3) {
             this.user.tile.transposeOrientation();
             atom.playSound('drop');
@@ -206,19 +204,17 @@ define(['core/placetiles'], function(placeTiles) {
             this.user.lastTile = this.user.tile;
             atom.playSound('pick');
           }
-        } else {
-
         }
         return this.user.lastClick += dt;
       },
       move: function(dt) {
-        if (atom.input.released('mouseleft') && (this.user.tile != null)) {
+        if ((atom.input.released('touchfinger') || atom.input.released('mouseleft')) && (this.user.tile != null)) {
           this.user.lastClick = 0;
           this.mode.current = 'select';
           this.user.tile.x = 32 * Math.round(this.user.tile.x * 0.03125);
           this.user.tile.y = 32 * Math.round(this.user.tile.y * 0.03125);
           atom.playSound('drop');
-          return console.log(this.verifyLayoutValid());
+          return this.verifyLayoutValid();
         } else {
           this.user.lastClick += dt;
           this.user.tile.x = atom.input.mouse.x - this.user.mouseOffset.x;
@@ -252,9 +248,8 @@ define(['core/placetiles'], function(placeTiles) {
         }
       }
       atom.input.bind(atom.button.LEFT, 'mouseleft');
+      atom.input.bind(atom.touch.TOUCHING, 'touchfinger');
     }
-
-    Kulami.prototype.checkNoOverlap = function() {};
 
     Kulami.prototype.update = function(dt) {
       return this.mode[this.mode.current].apply(this, [dt]);

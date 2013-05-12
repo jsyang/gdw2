@@ -51,8 +51,8 @@ define ->
       @_released = []
       @_pressed = {}
   
-    pressed: (action) -> @_pressed[action]
-    down: (action) -> @_down[action]
+    pressed:  (action) -> @_pressed[action]
+    down:     (action) -> @_down[action]
     released: (action) -> (action in @_released)
   
     onmousemove: (e) ->
@@ -69,9 +69,9 @@ define ->
         e.preventDefault()
   }
   
-  document.onkeydown = atom.input.onkeydown.bind(atom.input)
-  document.onkeyup = atom.input.onkeyup.bind(atom.input)
-  document.onmouseup = atom.input.onmouseup.bind(atom.input)
+  document.onkeydown  = atom.input.onkeydown.bind(atom.input)
+  document.onkeyup    = atom.input.onkeyup.bind(atom.input)
+  document.onmouseup  = atom.input.onmouseup.bind(atom.input)
   
   atom.button =
     LEFT: -1
@@ -111,6 +111,7 @@ define ->
   atom.canvas.style.top = "0"
   atom.canvas.style.left = "0"
   atom.context = atom.canvas.getContext '2d'
+  atom.context.clear = -> @clearRect(0,0,atom.width,atom.height)
   
   atom.canvas.onmousemove     = atom.input.onmousemove.bind(atom.input)
   atom.canvas.onmousedown     = atom.input.onmousedown.bind(atom.input)

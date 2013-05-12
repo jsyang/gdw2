@@ -87,7 +87,11 @@ define [
         
         [@w, @h] = [parseInt(@w), parseInt(@h)]
         
+  
+  class Button
+    constructor : ->
     
+  
   class Kulami extends atom.Game
     
     getLayoutOrigin : ->

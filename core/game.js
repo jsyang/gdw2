@@ -2,7 +2,7 @@ var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 define(['core/placetiles'], function(placeTiles) {
-  var CELLSIZE, Kulami, MoveTile;
+  var Button, CELLSIZE, Kulami, MoveTile;
   CELLSIZE = 32;
   MoveTile = (function() {
 
@@ -93,6 +93,13 @@ define(['core/placetiles'], function(placeTiles) {
     }
 
     return MoveTile;
+
+  })();
+  Button = (function() {
+
+    function Button() {}
+
+    return Button;
 
   })();
   return Kulami = (function(_super) {

@@ -2,10 +2,12 @@ define [
   'core/placetiles'
 ], (placeTiles) ->
   
+  CELLSIZE = 32
+  
   class MoveTile
     BORDERSIZE  : 4
     BORDERSIZE_ : 0.25
-    CELLSIZE    : 32
+    CELLSIZE    : CELLSIZE
     size        : null
     x           : 0
     y           : 0
@@ -89,9 +91,18 @@ define [
       @user.layout.by = maxY
     
     verifyLayoutValid : ->
-      layout = ( 0 for i in [0...(@user.layout.bx-@user.layout.x)*(@user.layout.by-@user.layout.y)])
+      @getLayoutOrigin()
+      layout = ( 0 for i in [0...(@user.layout.bx>>5)*(@user.layout.by>>5)] )
+
       for t in @tiles
-        t.
+        for y in [t.y>>5...(t.y>>5)+t.h]
+          for x in [t.x>>5...(t.x>>5)+t.w]
+            layout[y*(@user.layout.bx>>5) + x]++
+            if layout[y*(@user.layout.bx>>5) + x] > 1
+              return false
+
+      return true
+      
     
     findTile : ->
       mx = atom.input.mouse.x
@@ -113,7 +124,6 @@ define [
         y   : 0
         bx  : 0
         by  : 0
-        total : []
       mouseOffset :
         x : 0
         y : 0
@@ -148,7 +158,7 @@ define [
           @user.tile.x = 32*Math.round(@user.tile.x * 0.03125)
           @user.tile.y = 32*Math.round(@user.tile.y * 0.03125)
           atom.playSound('drop')
-          @verifyLayoutValid()
+          console.log(@verifyLayoutValid())
           
         else
           @user.lastClick += dt

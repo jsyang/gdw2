@@ -97,7 +97,23 @@ define(['core/placetiles'], function(placeTiles) {
   })();
   Button = (function() {
 
-    function Button() {}
+    Button.prototype.x = 0;
+
+    Button.prototype.y = 0;
+
+    Button.prototype.w = 0;
+
+    Button.prototype.h = 0;
+
+    Button.prototype.draw = function() {};
+
+    function Button() {
+      var k, v;
+      for (k in params) {
+        v = params[k];
+        this[k] = v;
+      }
+    }
 
     return Button;
 
@@ -231,6 +247,10 @@ define(['core/placetiles'], function(placeTiles) {
     };
 
     Kulami.prototype.tiles = [];
+
+    Kulami.prototype.buttons = {
+      start: new Button({})
+    };
 
     function Kulami() {
       var i, k, makeTile, tileList, v, _i,

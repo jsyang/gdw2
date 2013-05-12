@@ -89,9 +89,18 @@ define [
         
   
   class Button
-    constructor : ->
+    x : 0
+    y : 0
+    w : 0
+    h : 0
     
-  
+    draw : ->
+    
+    constructor : ->
+      @[k] = v for k, v of params
+    
+    
+    
   class Kulami extends atom.Game
     
     getLayoutOrigin : ->
@@ -200,7 +209,12 @@ define [
     
     
     tiles : []
-      
+    
+    buttons :
+      start : new Button({
+        
+      })
+    
     constructor : ->
       tileList =  # The full list for kulami.
         '3x2' : 4

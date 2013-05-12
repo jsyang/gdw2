@@ -5,7 +5,8 @@ define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
   startGame = function() {
     var g;
     g = new Kulami();
-    return g.run();
+    g.run();
+    return window.poo = g;
   };
   loaded = {
     gfx: false,

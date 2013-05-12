@@ -7,6 +7,8 @@ define [
   startGame = ->
     g = new Kulami()
     g.run()
+    
+    window.poo = g
   
   loaded =
     gfx : false

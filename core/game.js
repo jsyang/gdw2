@@ -21,23 +21,23 @@ define(['core/placetiles'], function(placeTiles) {
 
     MoveTile.prototype.h = 1;
 
-    MoveTile.prototype.transposeOrientation = false;
+    MoveTile.prototype.transposeOrientation = function() {
+      var _h, _ref, _w;
+      _ref = [this.w, this.h], _w = _ref[0], _h = _ref[1];
+      this.w = _h;
+      return this.h = _w;
+    };
 
     MoveTile.prototype.containsPoint = function(x, y) {
       return ((this.x < x && x < this.x + this.CELLSIZE * this.w)) && ((this.y < y && y < this.y + this.CELLSIZE * this.h));
     };
 
     MoveTile.prototype.draw = function() {
-      var cx, cy, h, i, j, w, x, y, _h, _i, _j, _ref, _ref1, _ref2, _w;
-      if (this.transposeOrientation) {
-        _ref = [this.h, this.w], _w = _ref[0], _h = _ref[1];
-      } else {
-        _ref1 = [this.w, this.h], _w = _ref1[0], _h = _ref1[1];
-      }
+      var cx, cy, h, i, j, w, x, y, _i, _j, _ref, _ref1, _ref2;
       atom.context.lineWidth = 2;
       atom.context.strokeStyle = '#999';
-      for (j = _i = 0; 0 <= _h ? _i < _h : _i > _h; j = 0 <= _h ? ++_i : --_i) {
-        for (i = _j = 0; 0 <= _w ? _j < _w : _j > _w; i = 0 <= _w ? ++_j : --_j) {
+      for (j = _i = 0, _ref = this.h; 0 <= _ref ? _i < _ref : _i > _ref; j = 0 <= _ref ? ++_i : --_i) {
+        for (i = _j = 0, _ref1 = this.w; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
           _ref2 = [this.x + this.CELLSIZE * i, this.y + this.CELLSIZE * j, this.CELLSIZE, this.CELLSIZE, this.x + this.CELLSIZE * i + this.CELLSIZE * 0.5, this.y + this.CELLSIZE * j + this.CELLSIZE * 0.5], x = _ref2[0], y = _ref2[1], w = _ref2[2], h = _ref2[3], cx = _ref2[4], cy = _ref2[5];
           atom.context.fillStyle = '#abc';
           atom.context.fillRect(x, y, w, h);
@@ -51,7 +51,7 @@ define(['core/placetiles'], function(placeTiles) {
       }
       atom.context.strokeStyle = '#000';
       atom.context.lineWidth = this.BORDERSIZE;
-      return atom.context.strokeRect(this.x + this.BORDERSIZE_ + 1, this.y + this.BORDERSIZE_ + 1, _w * this.CELLSIZE - this.BORDERSIZE + 2, _h * this.CELLSIZE - this.BORDERSIZE + 2);
+      return atom.context.strokeRect(this.x + this.BORDERSIZE_ + 1, this.y + this.BORDERSIZE_ + 1, this.w * this.CELLSIZE - this.BORDERSIZE + 2, this.h * this.CELLSIZE - this.BORDERSIZE + 2);
     };
 
     function MoveTile(params) {
@@ -79,6 +79,35 @@ define(['core/placetiles'], function(placeTiles) {
   return Kulami = (function(_super) {
 
     __extends(Kulami, _super);
+
+    Kulami.prototype.getLayoutOrigin = function() {
+      var minX, minY, t, _i, _len, _ref, _results;
+      minX = Infinity;
+      minY = Infinity;
+      _ref = this.tiles;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        t = _ref[_i];
+        if (t.x < minX) {
+          _results.push(minX = t.x);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    Kulami.prototype.verifyLayoutValid = function() {
+      var t, _i, _len, _ref, _results;
+      this.tiles.sort();
+      _ref = this.tiles;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        t = _ref[_i];
+        _results.push(stuff());
+      }
+      return _results;
+    };
 
     Kulami.prototype.findTile = function() {
       var mx, my, t, _i, _len, _ref;
@@ -112,8 +141,7 @@ define(['core/placetiles'], function(placeTiles) {
       select: function(dt) {
         if (atom.input.down('mouseleft') && this.findTile()) {
           if (this.user.lastTile === this.user.tile && this.user.lastClick < 0.3) {
-            console.log(dt, this.user.lastClick);
-            this.user.tile.transposeOrientation ^= true;
+            this.user.tile.transposeOrientation();
             atom.playSound('drop');
             this.user.lastTile = null;
           } else {
@@ -122,6 +150,8 @@ define(['core/placetiles'], function(placeTiles) {
             this.user.lastTile = this.user.tile;
             atom.playSound('pick');
           }
+        } else {
+
         }
         return this.user.lastClick += dt;
       },
@@ -131,7 +161,8 @@ define(['core/placetiles'], function(placeTiles) {
           this.mode.current = 'select';
           this.user.tile.x = 32 * Math.round(this.user.tile.x * 0.03125);
           this.user.tile.y = 32 * Math.round(this.user.tile.y * 0.03125);
-          return atom.playSound('drop');
+          atom.playSound('drop');
+          return this.verifyLayoutValid();
         } else {
           this.user.lastClick += dt;
           this.user.tile.x = atom.input.mouse.x - this.user.mouseOffset.x;

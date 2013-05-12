@@ -12,24 +12,21 @@ define [
     w           : 1
     h           : 1
     
-    transposeOrientation : false
+    transposeOrientation : ->
+      [_w,_h] = [@w,@h]
+      @w = _h
+      @h = _w
     
     containsPoint : (x,y) ->
       return ( @x < x < @x+@CELLSIZE*@w ) and ( @y < y < @y+@CELLSIZE*@h )
     
     
     draw : ->
-      if @transposeOrientation
-        [_w,_h] = [@h,@w]
-      else
-        [_w,_h] = [@w,@h]
-        
-        
       atom.context.lineWidth    = 2
       atom.context.strokeStyle  = '#999'
       
-      for j in [0..._h]
-        for i in [0..._w]
+      for j in [0...@h]
+        for i in [0...@w]
           [x,y,w,h,cx,cy] = [
             @x+@CELLSIZE*i
             @y+@CELLSIZE*j
@@ -54,7 +51,7 @@ define [
       # draw bold outline!
       atom.context.strokeStyle  = '#000'
       atom.context.lineWidth    = @BORDERSIZE
-      atom.context.strokeRect(@x+@BORDERSIZE_+1, @y+@BORDERSIZE_+1, _w*@CELLSIZE-@BORDERSIZE+2, _h*@CELLSIZE-@BORDERSIZE+2)
+      atom.context.strokeRect(@x+@BORDERSIZE_+1, @y+@BORDERSIZE_+1, @w*@CELLSIZE-@BORDERSIZE+2, @h*@CELLSIZE-@BORDERSIZE+2)
     
     constructor : (params) ->
       @[k] = v for k, v of params
@@ -72,7 +69,30 @@ define [
         
     
   class Kulami extends atom.Game
+    
+    getLayoutOrigin : ->
+      minX  = Infinity
+      maxX  = 0
+      minY  = Infinity
+      maxY  = 0
+      
+      for t in @tiles
+        if t.x < minX then minX = t.x
+        if t.y < minY then minY = t.y
+        
+        if t.x+t.w > maxX then maxX = t.x+t.w
+        if t.y+t.h > maxY then maxY = t.y+t.h
 
+      @user.layout.x  = minX
+      @user.layout.y  = minY
+      @user.layout.bx = maxX
+      @user.layout.by = maxY
+    
+    verifyLayoutValid : ->
+      layout = ( 0 for i in [0...(@user.layout.bx-@user.layout.x)*(@user.layout.by-@user.layout.y)])
+      for t in @tiles
+        t.
+    
     findTile : ->
       mx = atom.input.mouse.x
       my = atom.input.mouse.y
@@ -88,8 +108,12 @@ define [
       lastClick : 0
       lastTile  : null     
       tile      : null
-      
-      
+      layout    :
+        x   : 0
+        y   : 0
+        bx  : 0
+        by  : 0
+        total : []
       mouseOffset :
         x : 0
         y : 0
@@ -98,12 +122,10 @@ define [
       current : 'select'
 
       select : (dt) ->
-        
         if atom.input.down('mouseleft') and @findTile()
           # double click to change orientation
           if @user.lastTile is @user.tile and @user.lastClick < 0.3
-            console.log(dt, @user.lastClick)
-            @user.tile.transposeOrientation ^= true
+            @user.tile.transposeOrientation()
             atom.playSound('drop')
             @user.lastTile = null
             
@@ -113,6 +135,9 @@ define [
             @user.lastTile = @user.tile
             atom.playSound('pick')
         
+        else
+          # check overall correctness of layout
+          
         @user.lastClick += dt
                       
       move : (dt) ->
@@ -123,6 +148,7 @@ define [
           @user.tile.x = 32*Math.round(@user.tile.x * 0.03125)
           @user.tile.y = 32*Math.round(@user.tile.y * 0.03125)
           atom.playSound('drop')
+          @verifyLayoutValid()
           
         else
           @user.lastClick += dt

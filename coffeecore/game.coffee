@@ -100,23 +100,22 @@ define [
     tiles : []
       
     constructor : ->
+      tileList =  # The full list for kulami.
+        '3x2' : 4
+        '2x2' : 5
+        '3x1' : 4
+        '2x1' : 4
       
-      makeTile = ->
-        w = $$.R(1,3)
-        if w is 3
-          h = $$.R(1,2)
-        else if w is 1
-          h = $$.R(2,3)
-        else
-          h = $$.R(1,3)
-        
-        new MoveTile({
-          size  : "#{w}x#{h}"
-          x     : $$.R(1,300)
-          y     : $$.R(1,300)
-        })
+      makeTile = (size) =>
+        @tiles.push(
+          new MoveTile({
+            size
+            x     : $$.R(1,300)
+            y     : $$.R(1,300)
+          })
+        )
       
-      @tiles = (makeTile() for i in [0...$$.R(3,10)])
+      ( makeTile(k) for i in [0...v] ) for k,v of tileList
     
       atom.input.bind atom.button.LEFT, 'mouseleft'
     

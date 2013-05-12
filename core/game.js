@@ -124,31 +124,27 @@ define(['core/placetiles'], function(placeTiles) {
     Kulami.prototype.tiles = [];
 
     function Kulami() {
-      var i, makeTile;
-      makeTile = function() {
-        var h, w;
-        w = $$.R(1, 3);
-        if (w === 3) {
-          h = $$.R(1, 2);
-        } else if (w === 1) {
-          h = $$.R(2, 3);
-        } else {
-          h = $$.R(1, 3);
-        }
-        return new MoveTile({
-          size: "" + w + "x" + h,
+      var i, k, makeTile, tileList, v, _i,
+        _this = this;
+      tileList = {
+        '3x2': 4,
+        '2x2': 5,
+        '3x1': 4,
+        '2x1': 4
+      };
+      makeTile = function(size) {
+        return _this.tiles.push(new MoveTile({
+          size: size,
           x: $$.R(1, 300),
           y: $$.R(1, 300)
-        });
+        }));
       };
-      this.tiles = (function() {
-        var _i, _ref, _results;
-        _results = [];
-        for (i = _i = 0, _ref = $$.R(3, 10); 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-          _results.push(makeTile());
+      for (k in tileList) {
+        v = tileList[k];
+        for (i = _i = 0; 0 <= v ? _i < v : _i > v; i = 0 <= v ? ++_i : --_i) {
+          makeTile(k);
         }
-        return _results;
-      })();
+      }
       atom.input.bind(atom.button.LEFT, 'mouseleft');
     }
 

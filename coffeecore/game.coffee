@@ -4,6 +4,10 @@ define [
   
   CELLSIZE = 32
   
+  COLORS =
+    RED   : 1
+    BLACK : 2
+  
   class MoveTile
     BORDERSIZE        : 4
     BORDERSIZE_       : 0.25
@@ -13,7 +17,13 @@ define [
     y                 : 0
     w                 : 1
     h                 : 1
+    # tile coords relative to user.layout
+    lx                : 0   
+    ly                : 0
+    
     invalidPlacement  : true
+    
+    cells             : null
     
     transposeOrientation : ->
       [_w,_h] = [@w,@h]
@@ -23,6 +33,15 @@ define [
     containsPoint : (x,y) ->
       return ( @x < x < @x+@CELLSIZE*@w ) and ( @y < y < @y+@CELLSIZE*@h )
     
+    lockOrientation : -> @cells = (0 for i in [0...@w*@h])
+    
+    getInnerCell : (x,y) -> return @cells[@w*y+x]
+    
+    getOuterCell : (x,y) -> return @getInnerCell(x-@lx,y-@ly)
+    
+    setInnerCell : (x,y,v) -> return @cells[@w*y+x] = v
+    
+    setOuterCell : (x,y,v) -> return @setInnerCell(x-@lx,y-@ly,v)
     
     draw : ->
       ac = atom.context
@@ -58,7 +77,13 @@ define [
           if @invalidPlacement
             ac.fillStyle = '#a89'
           else
-            ac.fillStyle = '#789'
+            if @cells? and @cells[@w*j+i] > 0
+              if @cells[@w*j+i] is 1
+                ac.fillStyle = '#b32'
+              else
+                ac.fillStyle = '#222'
+            else 
+              ac.fillStyle = '#789'
           
           ac.beginPath()
           
@@ -88,6 +113,7 @@ define [
           @h = sides[0]
         
         [@w, @h] = [parseInt(@w), parseInt(@h)]
+        
         
   
   class Button
@@ -152,6 +178,9 @@ define [
               t.invalidPlacement = true
               return false
         t.invalidPlacement = false
+      
+      @user.layout.array = layout
+      
       return true
       
     
@@ -176,14 +205,27 @@ define [
           @user.lastButton = null
       
       false
-      
+    
+    translateMouseToLayout : ->
+      # tile coords. not pixel coords
+      return {
+        x : ((atom.input.mouse.x>>5) - @user.layout.x<<5) >> 5
+        y : ((atom.input.mouse.y>>5) - @user.layout.y<<5) >> 5
+      }
+    
     user :
+      COLORS : [ null, 'red', 'black' ]
+      
+      color : 1
+    
       lastClick   : 0
       lastButton  : null
       lastTile    : null     
       tile        : null
       layout    :
-        x   : 0
+        array : []
+        # units for these coords are in tiles, not pixels
+        x   : 0   
         y   : 0
         bx  : 0
         by  : 0
@@ -195,7 +237,16 @@ define [
       current : 'select'
 
       play : (dt) ->
-        if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
+        if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
+          if @findUIThing('tiles')
+            mouse = @translateMouseToLayout()
+            if @user.tile.getOuterCell(mouse.x, mouse.y)
+              # already played here. illegal move
+            else
+              @user.tile.setOuterCell(mouse.x, mouse.y, @user.color)
+              @user.color++
+              if @user.color > 2 then @user.color = 1
+              
           atom.playSound('crack')
       
       select : (dt) ->
@@ -264,8 +315,14 @@ define [
           b.clicked = null
         
       startgame : ->
-        @mode.current = 'play'
+        (
+          t.lockOrientation()
+          t.lx = (t.x>>5) - @user.layout.x
+          t.ly = (t.y>>5) - @user.layout.y
+        ) for t in @tiles
+        @verifyLayoutValid()
         @triggers.removestartbutton.call(@)
+        @mode.current = 'play'
     
     tiles : []
     

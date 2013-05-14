@@ -325,6 +325,8 @@ define [
       
     mode :
       current : 'select'
+      
+      gameover : (dt) ->
 
       play : (dt) ->
         if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
@@ -470,6 +472,7 @@ define [
         
         alert("Final scores:\nRED\t\t#{scores.red}\nBLACK\t#{scores.black}")
         
+        @mode.current = 'gameover'
     
     tiles : []
     

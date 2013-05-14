@@ -395,6 +395,7 @@ define(['core/placetiles'], function(placeTiles) {
 
     Kulami.prototype.mode = {
       current: 'select',
+      gameover: function(dt) {},
       play: function(dt) {
         var mouse;
         if (atom.input.pressed('touchfinger') || atom.input.pressed('mouseleft')) {
@@ -564,7 +565,8 @@ define(['core/placetiles'], function(placeTiles) {
             scores.black += t.w * t.h;
           }
         }
-        return alert("Final scores:\nRED\t\t" + scores.red + "\nBLACK\t" + scores.black);
+        alert("Final scores:\nRED\t\t" + scores.red + "\nBLACK\t" + scores.black);
+        return this.mode.current = 'gameover';
       }
     };
 

@@ -170,8 +170,16 @@ define(['core/placetiles'], function(placeTiles) {
       ac.lineWidth = 2;
       ac.strokeStyle = '#111';
       ac.fillStyle = this.color[this.state];
+      if (this.color.opacity != null) {
+        ac.globalAlpha = this.color.opacity;
+        ac.globalCompositeOperation = 'lighter';
+      }
       ac.fillRect(this.x, this.y, this.w, this.h);
-      return ac.strokeRect(this.x, this.y, this.w, this.h);
+      ac.strokeRect(this.x, this.y, this.w, this.h);
+      if (this.color.opacity != null) {
+        ac.globalAlpha = 1;
+        return ac.globalCompositeOperation = 'source-over';
+      }
     };
 
     function Button(params) {
@@ -248,6 +256,18 @@ define(['core/placetiles'], function(placeTiles) {
       return true;
     };
 
+    Kulami.prototype.findTileAt = function(x, y) {
+      var t, _i, _len, _ref;
+      _ref = this.tiles;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        t = _ref[_i];
+        if (t.containsPoint(x, y)) {
+          return t;
+        }
+      }
+      return null;
+    };
+
     Kulami.prototype.findUIThing = function(thingType) {
       var k, mx, my, t, v, _i, _len, _ref, _ref1;
       mx = atom.input.mouse.x;
@@ -286,15 +306,63 @@ define(['core/placetiles'], function(placeTiles) {
       };
     };
 
+    Kulami.prototype.createRandomLayout = function() {
+      var i, maxX, minX, tilePool, tileToPlace, tryLayingTile, x, y, _ref,
+        _this = this;
+      tilePool = this.tiles.slice();
+      this.tiles = [];
+      _ref = [1, 1], x = _ref[0], y = _ref[1];
+      minX = x;
+      maxX = 16;
+      this.user.layout.x = x;
+      this.user.layout.y = y;
+      tryLayingTile = function(t) {
+        var i, invalid;
+        invalid = true;
+        i = 0;
+        while (invalid) {
+          if (i === 0) {
+            t.transposeOrientation();
+          } else {
+            t.x += 32;
+            if (t.x >> 5 > maxX) {
+              t.x = minX << 5;
+              t.y += 32;
+            }
+          }
+          i++;
+          i %= 2;
+          invalid = !_this.verifyLayoutValid();
+        }
+      };
+      while (tilePool.length > 0) {
+        i = $$.R(0, tilePool.length - 1);
+        tileToPlace = tilePool[i];
+        tilePool.splice(i, 1);
+        this.tiles.push(tileToPlace);
+        tileToPlace.x = x << 5;
+        tileToPlace.y = y << 5;
+        tryLayingTile(tileToPlace);
+        x = tileToPlace.x >> 5;
+        y = tileToPlace.y >> 5;
+      }
+      this.triggers.startgame.call(this);
+    };
+
     Kulami.prototype.user = {
+      moves: 0,
       COLORS: [null, 'red', 'black'],
       color: 1,
       lastClick: 0,
       lastButton: null,
+      lastMove: {
+        x: -1,
+        y: -1
+      },
       lastTile: null,
       tile: null,
       layout: {
-        array: [],
+        array: null,
         x: 0,
         y: 0,
         bx: 0,
@@ -306,21 +374,47 @@ define(['core/placetiles'], function(placeTiles) {
       }
     };
 
+    Kulami.prototype.checkIfPlayerHasMovesLeft = function() {
+      var movesLeft, t, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
+      movesLeft = 0;
+      y = this.user.lastMove.y;
+      for (x = _i = _ref = this.user.layout.x, _ref1 = this.user.layout.bx; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
+        t = this.findTileAt(x, y);
+        if ((t != null) && t !== this.user.lastTile && t.getOuterCell(x, y) === 0) {
+          return true;
+        }
+      }
+      x = this.user.lastMove.x;
+      for (y = _j = _ref2 = this.user.layout.y, _ref3 = this.user.layout.by; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; y = _ref2 <= _ref3 ? ++_j : --_j) {
+        t = this.findTileAt(x, y);
+        if ((t != null) && t !== this.user.lastTile && t.getOuterCell(x, y) === 0) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     Kulami.prototype.mode = {
       current: 'select',
       play: function(dt) {
-        var mouse;
+        var a, mouse;
         if (atom.input.pressed('touchfinger') || atom.input.pressed('mouseleft')) {
           if (this.findUIThing('tiles')) {
             mouse = this.translateMouseToLayout();
-            if (this.user.tile.getOuterCell(mouse.x, mouse.y)) {
-
+            if ((this.user.tile === this.user.lastTile) || (this.user.tile.getOuterCell(mouse.x, mouse.y) > 0) || (this.user.moves > 0 && (mouse.x !== this.user.lastMove.x && mouse.y !== this.user.lastMove.y))) {
+              this.triggers.addhighlightbutton.apply(this);
             } else {
               this.user.tile.setOuterCell(mouse.x, mouse.y, this.user.color);
+              this.user.lastTile = this.user.tile;
               this.user.color++;
               if (this.user.color > 2) {
                 this.user.color = 1;
               }
+              this.triggers.removehighlightbutton.apply(this);
+              this.user.lastMove = mouse;
+              a = this.checkIfPlayerHasMovesLeft();
+              console.log('playerHasMovesLeft', a);
+              this.user.moves++;
             }
           }
           return atom.playSound('crack');
@@ -342,7 +436,7 @@ define(['core/placetiles'], function(placeTiles) {
           }
           this.user.lastClick += dt;
         }
-        if (atom.input.released('touchfinger') || atom.input.released('mouseleft')) {
+        if (atom.input.pressed('touchfinger') || atom.input.pressed('mouseleft')) {
           if (this.findUIThing('buttons')) {
             atom.playSound('drop');
             if (this.user.lastButton.clicked != null) {
@@ -372,10 +466,32 @@ define(['core/placetiles'], function(placeTiles) {
     };
 
     Kulami.prototype.triggers = {
+      addhighlightbutton: function() {
+        return this.buttons.highlightLastMove = new Button({
+          x: (this.user.layout.x + this.user.lastMove.x) << 5,
+          y: (this.user.layout.y + this.user.lastMove.y) << 5,
+          w: 32,
+          h: 32,
+          clicked: null,
+          color: {
+            opacity: 0.75,
+            pressed: '#5a9',
+            up: '#5a9'
+          }
+        });
+      },
+      removehighlightbutton: function() {
+        if (this.buttons.highlightLastMove != null) {
+          return delete this.buttons.highlightLastMove;
+        }
+      },
+      removerandomlayoutbutton: function() {
+        if (this.buttons.randomLayout != null) {
+          return delete this.buttons.randomLayout;
+        }
+      },
       removestartbutton: function() {
-        var b;
-        b = this.buttons.start;
-        if (b != null) {
+        if (this.buttons.start != null) {
           return delete this.buttons.start;
         }
       },
@@ -412,13 +528,28 @@ define(['core/placetiles'], function(placeTiles) {
         }
         this.verifyLayoutValid();
         this.triggers.removestartbutton.call(this);
+        this.triggers.removerandomlayoutbutton.call(this);
         return this.mode.current = 'play';
+      },
+      generaterandomlayout: function() {
+        return this.createRandomLayout();
       }
     };
 
     Kulami.prototype.tiles = [];
 
     Kulami.prototype.buttons = {
+      randomLayout: new Button({
+        x: atom.width - 100,
+        y: 120,
+        w: 80,
+        h: 80,
+        clicked: 'generaterandomlayout',
+        color: {
+          pressed: '#d3f',
+          up: '#d3f'
+        }
+      }),
       start: new Button({
         x: atom.width - 100,
         y: 20,
@@ -456,6 +587,12 @@ define(['core/placetiles'], function(placeTiles) {
       }
       atom.input.bind(atom.button.LEFT, 'mouseleft');
       atom.input.bind(atom.touch.TOUCHING, 'touchfinger');
+      window.onblur = function() {
+        return _this.stop;
+      };
+      window.onfocus = function() {
+        return _this.run;
+      };
     }
 
     Kulami.prototype.update = function(dt) {

@@ -136,8 +136,17 @@ define [
       ac.lineWidth    = 2
       ac.strokeStyle  = '#111'
       ac.fillStyle  = @color[@state]
+      
+      if @color.opacity?
+        ac.globalAlpha = @color.opacity
+        ac.globalCompositeOperation = 'lighter'
+      
       ac.fillRect(@x, @y, @w, @h)
       ac.strokeRect(@x, @y, @w, @h)
+      
+      if @color.opacity?
+        ac.globalAlpha = 1
+        ac.globalCompositeOperation = 'source-over'
       
       
     constructor : (params) ->
@@ -180,10 +189,15 @@ define [
         t.invalidPlacement = false
       
       @user.layout.array = layout
-      
       return true
       
     
+    findTileAt : (x,y) ->
+      for t in @tiles
+        if t.containsPoint(x, y)
+          return t
+      null
+      
     findUIThing : (thingType) ->
       mx = atom.input.mouse.x
       my = atom.input.mouse.y
@@ -213,26 +227,104 @@ define [
         y : ((atom.input.mouse.y>>5) - @user.layout.y<<5) >> 5
       }
     
+    createRandomLayout : ->
+      tilePool = @tiles.slice()
+      @tiles = []
+      
+      # start from here, iterate downwards
+      [x, y]  = [1, 1]
+      minX    = x
+      maxX    = 16
+      
+      @user.layout.x = x
+      @user.layout.y = y
+      
+      # side-effects may include infinite loops and drowsiness
+      tryLayingTile = (t) =>
+        invalid = true
+        i = 0
+        while invalid
+          if i is 0
+            t.transposeOrientation()
+          else
+            t.x+=32
+            if t.x>>5 > maxX
+              t.x = minX<<5
+              t.y+=32
+          i++
+          i %= 2
+          invalid = !@verifyLayoutValid()
+        
+        return
+      
+      while tilePool.length > 0
+        i = $$.R(0,tilePool.length-1)
+        tileToPlace = tilePool[i]
+        tilePool.splice(i,1)
+        @tiles.push(tileToPlace)
+        
+        # try placing one at "cursor" location
+        tileToPlace.x = x<<5
+        tileToPlace.y = y<<5
+        tryLayingTile(tileToPlace)
+        x = tileToPlace.x>>5
+        y = tileToPlace.y>>5
+        
+      # random layout generation was successful. begin the game.
+      @triggers.startgame.call(@)
+      
+      return
+
+    
     user :
+      moves : 0
+    
       COLORS : [ null, 'red', 'black' ]
       
       color : 1
     
       lastClick   : 0
       lastButton  : null
+      lastMove :
+        x : -1
+        y : -1
+      
       lastTile    : null     
-      tile        : null
+      tile        : null  # currently clicked tile
+
       layout    :
-        array : []
+        # used to calculate whether or not a player has any moves left
+        array : null
         # units for these coords are in tiles, not pixels
         x   : 0   
         y   : 0
-        bx  : 0
-        by  : 0
+        bx  : 0   # max X
+        by  : 0   # max Y
       mouseOffset :
         x : 0
         y : 0
 
+    checkIfPlayerHasMovesLeft : ->
+      movesLeft = 0
+      
+      # check horizontal
+      y = @user.lastMove.y
+      (
+        t = @findTileAt(x,y) 
+        if t? and t != @user.lastTile and t.getOuterCell(x,y) is 0
+          return true
+      ) for x in [@user.layout.x..@user.layout.bx]
+      
+      # check vertical
+      x = @user.lastMove.x
+      (
+        t = @findTileAt(x,y) 
+        if t? and t != @user.lastTile and t.getOuterCell(x,y) is 0
+          return true
+      ) for y in [@user.layout.y..@user.layout.by]
+      
+      false
+      
     mode :
       current : 'select'
 
@@ -240,12 +332,24 @@ define [
         if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
           if @findUIThing('tiles')
             mouse = @translateMouseToLayout()
-            if @user.tile.getOuterCell(mouse.x, mouse.y)
+            if  (@user.tile is @user.lastTile) or
+                (@user.tile.getOuterCell(mouse.x, mouse.y) > 0) or
+                (@user.moves > 0 and (mouse.x != @user.lastMove.x and mouse.y != @user.lastMove.y))
+              
               # already played here. illegal move
+              @triggers.addhighlightbutton.apply(@)
             else
               @user.tile.setOuterCell(mouse.x, mouse.y, @user.color)
+              @user.lastTile = @user.tile
               @user.color++
               if @user.color > 2 then @user.color = 1
+              @triggers.removehighlightbutton.apply(@)
+              @user.lastMove = mouse
+                
+              a = @checkIfPlayerHasMovesLeft()
+              console.log('playerHasMovesLeft', a)
+              
+              @user.moves++
               
           atom.playSound('crack')
       
@@ -258,8 +362,6 @@ define [
               @user.tile.transposeOrientation()
               atom.playSound('drop')
               @user.lastTile = null
-            
-              
             else
               @user.lastClick = 0
               @mode.current = 'move'
@@ -268,7 +370,7 @@ define [
             
           @user.lastClick += dt  
         
-        if (atom.input.released('touchfinger') or atom.input.released('mouseleft'))
+        if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
           if @findUIThing('buttons')
             atom.playSound('drop')
             @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
@@ -291,12 +393,30 @@ define [
           @user.lastClick += dt
           @user.tile.x = atom.input.mouse.x - @user.mouseOffset.x
           @user.tile.y = atom.input.mouse.y - @user.mouseOffset.y
+      
     
     triggers :
+      addhighlightbutton : ->
+        @buttons.highlightLastMove = new Button({
+          x : (@user.layout.x + @user.lastMove.x)<<5
+          y : (@user.layout.y + @user.lastMove.y)<<5
+          w : 32
+          h : 32
+          clicked : null
+          color :
+            opacity : 0.75
+            pressed : '#5a9'
+            up      : '#5a9'
+        })
+    
+      removehighlightbutton : ->
+        delete @buttons.highlightLastMove if @buttons.highlightLastMove?
+    
+      removerandomlayoutbutton : ->
+        delete @buttons.randomLayout if @buttons.randomLayout?
+    
       removestartbutton : ->
-        b = @buttons.start
-        if b?
-          delete @buttons.start
+        delete @buttons.start if @buttons.start?
           
       enablestartbutton : ->
         b = @buttons.start
@@ -322,11 +442,26 @@ define [
         ) for t in @tiles
         @verifyLayoutValid()
         @triggers.removestartbutton.call(@)
+        @triggers.removerandomlayoutbutton.call(@)
         @mode.current = 'play'
+        
+      generaterandomlayout : -> @createRandomLayout()
     
     tiles : []
     
     buttons :
+    
+      randomLayout : new Button({
+        x : atom.width - 100
+        y : 120
+        w : 80
+        h : 80
+        clicked : 'generaterandomlayout'
+        color :
+          pressed : '#d3f'
+          up      : '#d3f'
+      })
+      
       start : new Button({
         x : atom.width - 100
         y : 20
@@ -335,7 +470,7 @@ define [
         clicked : null
         color :
           pressed : '#0a0'
-          up : '#3e8'
+          up      : '#3e8'
       })
     
     constructor : ->
@@ -359,6 +494,9 @@ define [
       atom.input.bind(atom.button.LEFT, 'mouseleft')
       atom.input.bind(atom.touch.TOUCHING, 'touchfinger')
   
+      # make sure we don't waste them precious cycles.
+      window.onblur = => @stop
+      window.onfocus = => @run
       
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])

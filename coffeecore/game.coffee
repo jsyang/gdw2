@@ -31,7 +31,7 @@ define [
       @h = _w
     
     containsPoint : (x,y) ->
-      return ( @x < x < @x+@CELLSIZE*@w ) and ( @y < y < @y+@CELLSIZE*@h )
+      return ( @x <= x < @x+@CELLSIZE*@w ) and ( @y <= y < @y+@CELLSIZE*@h )
     
     lockOrientation : -> @cells = (0 for i in [0...@w*@h])
     
@@ -194,7 +194,7 @@ define [
     
     findTileAt : (x,y) ->
       for t in @tiles
-        if t.containsPoint(x, y)
+        if t.containsPoint(x, y) # in pixels
           return t
       null
       
@@ -305,21 +305,19 @@ define [
         y : 0
 
     checkIfPlayerHasMovesLeft : ->
-      movesLeft = 0
-      
       # check horizontal
-      y = @user.lastMove.y
+      y = @user.lastMove.y + @user.layout.y
       (
-        t = @findTileAt(x,y) 
-        if t? and t != @user.lastTile and t.getOuterCell(x,y) is 0
+        t = @findTileAt(x<<5,y<<5) 
+        if t? and t != @user.lastTile and t.getOuterCell(x-@user.layout.x,y-@user.layout.y) is 0
           return true
       ) for x in [@user.layout.x..@user.layout.bx]
       
       # check vertical
-      x = @user.lastMove.x
+      x = @user.lastMove.x + @user.layout.x
       (
-        t = @findTileAt(x,y) 
-        if t? and t != @user.lastTile and t.getOuterCell(x,y) is 0
+        t = @findTileAt(x<<5,y<<5) 
+        if t? and t != @user.lastTile and t.getOuterCell(x-@user.layout.x,y-@user.layout.y) is 0
           return true
       ) for y in [@user.layout.y..@user.layout.by]
       
@@ -346,12 +344,14 @@ define [
               @triggers.removehighlightbutton.apply(@)
               @user.lastMove = mouse
                 
-              a = @checkIfPlayerHasMovesLeft()
-              console.log('playerHasMovesLeft', a)
+              if !@checkIfPlayerHasMovesLeft()
+                alert('No moves left for '+@user.COLORS[@user.color]+'!')
+                @triggers.calculatescores.call(@)
               
               @user.moves++
+              atom.playSound('crack')
               
-          atom.playSound('crack')
+          
       
       select : (dt) ->
         if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
@@ -440,12 +440,36 @@ define [
           t.lx = (t.x>>5) - @user.layout.x
           t.ly = (t.y>>5) - @user.layout.y
         ) for t in @tiles
-        @verifyLayoutValid()
         @triggers.removestartbutton.call(@)
         @triggers.removerandomlayoutbutton.call(@)
         @mode.current = 'play'
         
       generaterandomlayout : -> @createRandomLayout()
+      
+      calculatescores : ->
+        scores =
+          red   : 0
+          black : 0
+          
+        for t in @tiles
+          scoreWithinTile = 
+            red   : 0
+            black : 0
+            
+          for i in t.cells
+            switch i
+              when 1
+                scoreWithinTile.red++
+              when 2
+                scoreWithinTile.black++
+                
+          if scoreWithinTile.red > scoreWithinTile.black
+            scores.red += t.w*t.h
+          else if scoreWithinTile.red < scoreWithinTile.black
+            scores.black += t.w*t.h
+        
+        alert("Final scores:\nRED\t\t#{scores.red}\nBLACK\t#{scores.black}")
+        
     
     tiles : []
     

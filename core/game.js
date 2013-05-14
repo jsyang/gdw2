@@ -43,7 +43,7 @@ define(['core/placetiles'], function(placeTiles) {
     };
 
     MoveTile.prototype.containsPoint = function(x, y) {
-      return ((this.x < x && x < this.x + this.CELLSIZE * this.w)) && ((this.y < y && y < this.y + this.CELLSIZE * this.h));
+      return ((this.x <= x && x < this.x + this.CELLSIZE * this.w)) && ((this.y <= y && y < this.y + this.CELLSIZE * this.h));
     };
 
     MoveTile.prototype.lockOrientation = function() {
@@ -375,19 +375,18 @@ define(['core/placetiles'], function(placeTiles) {
     };
 
     Kulami.prototype.checkIfPlayerHasMovesLeft = function() {
-      var movesLeft, t, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
-      movesLeft = 0;
-      y = this.user.lastMove.y;
+      var t, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
+      y = this.user.lastMove.y + this.user.layout.y;
       for (x = _i = _ref = this.user.layout.x, _ref1 = this.user.layout.bx; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
-        t = this.findTileAt(x, y);
-        if ((t != null) && t !== this.user.lastTile && t.getOuterCell(x, y) === 0) {
+        t = this.findTileAt(x << 5, y << 5);
+        if ((t != null) && t !== this.user.lastTile && t.getOuterCell(x - this.user.layout.x, y - this.user.layout.y) === 0) {
           return true;
         }
       }
-      x = this.user.lastMove.x;
+      x = this.user.lastMove.x + this.user.layout.x;
       for (y = _j = _ref2 = this.user.layout.y, _ref3 = this.user.layout.by; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; y = _ref2 <= _ref3 ? ++_j : --_j) {
-        t = this.findTileAt(x, y);
-        if ((t != null) && t !== this.user.lastTile && t.getOuterCell(x, y) === 0) {
+        t = this.findTileAt(x << 5, y << 5);
+        if ((t != null) && t !== this.user.lastTile && t.getOuterCell(x - this.user.layout.x, y - this.user.layout.y) === 0) {
           return true;
         }
       }
@@ -397,12 +396,12 @@ define(['core/placetiles'], function(placeTiles) {
     Kulami.prototype.mode = {
       current: 'select',
       play: function(dt) {
-        var a, mouse;
+        var mouse;
         if (atom.input.pressed('touchfinger') || atom.input.pressed('mouseleft')) {
           if (this.findUIThing('tiles')) {
             mouse = this.translateMouseToLayout();
             if ((this.user.tile === this.user.lastTile) || (this.user.tile.getOuterCell(mouse.x, mouse.y) > 0) || (this.user.moves > 0 && (mouse.x !== this.user.lastMove.x && mouse.y !== this.user.lastMove.y))) {
-              this.triggers.addhighlightbutton.apply(this);
+              return this.triggers.addhighlightbutton.apply(this);
             } else {
               this.user.tile.setOuterCell(mouse.x, mouse.y, this.user.color);
               this.user.lastTile = this.user.tile;
@@ -412,12 +411,14 @@ define(['core/placetiles'], function(placeTiles) {
               }
               this.triggers.removehighlightbutton.apply(this);
               this.user.lastMove = mouse;
-              a = this.checkIfPlayerHasMovesLeft();
-              console.log('playerHasMovesLeft', a);
+              if (!this.checkIfPlayerHasMovesLeft()) {
+                alert('No moves left for ' + this.user.COLORS[this.user.color] + '!');
+                this.triggers.calculatescores.call(this);
+              }
               this.user.moves++;
+              return atom.playSound('crack');
             }
           }
-          return atom.playSound('crack');
         }
       },
       select: function(dt) {
@@ -526,13 +527,44 @@ define(['core/placetiles'], function(placeTiles) {
           t.lx = (t.x >> 5) - this.user.layout.x;
           t.ly = (t.y >> 5) - this.user.layout.y;
         }
-        this.verifyLayoutValid();
         this.triggers.removestartbutton.call(this);
         this.triggers.removerandomlayoutbutton.call(this);
         return this.mode.current = 'play';
       },
       generaterandomlayout: function() {
         return this.createRandomLayout();
+      },
+      calculatescores: function() {
+        var i, scoreWithinTile, scores, t, _i, _j, _len, _len1, _ref, _ref1;
+        scores = {
+          red: 0,
+          black: 0
+        };
+        _ref = this.tiles;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          t = _ref[_i];
+          scoreWithinTile = {
+            red: 0,
+            black: 0
+          };
+          _ref1 = t.cells;
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            i = _ref1[_j];
+            switch (i) {
+              case 1:
+                scoreWithinTile.red++;
+                break;
+              case 2:
+                scoreWithinTile.black++;
+            }
+          }
+          if (scoreWithinTile.red > scoreWithinTile.black) {
+            scores.red += t.w * t.h;
+          } else if (scoreWithinTile.red < scoreWithinTile.black) {
+            scores.black += t.w * t.h;
+          }
+        }
+        return alert("Final scores:\nRED\t\t" + scores.red + "\nBLACK\t" + scores.black);
       }
     };
 

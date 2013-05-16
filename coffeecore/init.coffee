@@ -5,13 +5,10 @@ define [
 ], (_util, _atom, Kulami) ->
 
   startGame = ->
-    g = new Kulami()
-    g.run()
-    
-    window.poo = g
+    (new Kulami()).run()
   
   loaded =
-    gfx : false
+    gfx : true #false
     sfx : false
     
   isPreloadComplete = ->
@@ -21,12 +18,14 @@ define [
     else
       false
   
-  atom.preloadImages({
-    ball : 'ball.png'
-  }, ->
-    loaded.gfx = true
-    isPreloadComplete()
-  )
+  
+  # No GFX yet.
+  #atom.preloadImages({
+  #  ball : 'ball.png'
+  #}, ->
+  #  loaded.gfx = true
+  #  isPreloadComplete()
+  #)
   
   atom.preloadSounds({
     crack : 'crack.mp3'

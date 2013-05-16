@@ -3,13 +3,10 @@
 define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
   var isPreloadComplete, loaded, startGame;
   startGame = function() {
-    var g;
-    g = new Kulami();
-    g.run();
-    return window.poo = g;
+    return (new Kulami()).run();
   };
   loaded = {
-    gfx: false,
+    gfx: true,
     sfx: false
   };
   isPreloadComplete = function() {
@@ -20,12 +17,6 @@ define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
       return false;
     }
   };
-  atom.preloadImages({
-    ball: 'ball.png'
-  }, function() {
-    loaded.gfx = true;
-    return isPreloadComplete();
-  });
   atom.preloadSounds({
     crack: 'crack.mp3',
     pick: 'pick.mp3',

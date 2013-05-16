@@ -12,6 +12,8 @@ define ->
     lx                : 0   
     ly                : 0
     
+    rotation          : 0
+    
     invalidPlacement  : true
     
     cells             : null
@@ -34,9 +36,25 @@ define ->
     
     setOuterCell : (x,y,v) -> return @setInnerCell(x-@lx,y-@ly,v)
     
-    draw : ->
-      ac = atom.context
+    getCentroid : ->
+      return {
+        x : @x + @w*@CELLSIZE*0.5
+        y : @y + @h*@CELLSIZE*0.5
+      }
     
+    draw : ->
+      
+      ac = atom.context
+  
+      ac.save()
+      c = @getCentroid()
+      ac.translate(c.x, c.y)
+      rotationMagnitude = Math.abs(@rotation)
+      if rotationMagnitude > 0
+        @rotation *= 0.6
+        if rotationMagnitude < 0.001 then @rotation = 0
+      ac.rotate(@rotation) unless @rotation is 0
+
       ac.lineWidth    = 2
       
       if @invalidPlacement
@@ -48,12 +66,12 @@ define ->
       for j in [0...@h]
         for i in [0...@w]
           [x,y,w,h,cx,cy] = [
-            @x+@CELLSIZE*i
-            @y+@CELLSIZE*j
+            @CELLSIZE*(i-@w*0.5)
+            @CELLSIZE*(j-@h*0.5)
             @CELLSIZE
             @CELLSIZE
-            @x+@CELLSIZE*i + @CELLSIZE*0.5
-            @y+@CELLSIZE*j + @CELLSIZE*0.5
+            @CELLSIZE*(i-@w*0.5) + @CELLSIZE*0.5
+            @CELLSIZE*(j-@h*0.5) + @CELLSIZE*0.5
           ]
           
           if @invalidPlacement
@@ -81,6 +99,7 @@ define ->
           ac.arc(cx, cy, 8, 0, 2*Math.PI, true)
           ac.fill()
           ac.stroke()
+          
       
       # draw bold outline!
       if @invalidPlacement
@@ -88,8 +107,14 @@ define ->
       else
         ac.strokeStyle  = '#000'
         
+      [x,y] = [
+        @CELLSIZE*(-@w*0.5)
+        @CELLSIZE*(-@h*0.5)
+      ]
       ac.lineWidth    = @BORDERSIZE
-      ac.strokeRect(@x+@BORDERSIZE_+1, @y+@BORDERSIZE_+1, @w*@CELLSIZE-@BORDERSIZE+2, @h*@CELLSIZE-@BORDERSIZE+2)
+      ac.strokeRect(x+@BORDERSIZE_+1, y+@BORDERSIZE_+1, @w*@CELLSIZE-@BORDERSIZE+2, @h*@CELLSIZE-@BORDERSIZE+2)
+      
+      ac.restore()
     
     constructor : (params) ->
       @[k] = v for k, v of params

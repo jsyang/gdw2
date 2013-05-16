@@ -138,6 +138,10 @@ define [
         x : -1
         y : -1
       
+      lastMouse : # for tile rotation
+        x : 0
+        y : 0
+      
       lastTile    : null     
       tile        : null  # currently clicked tile
 
@@ -244,6 +248,21 @@ define [
           @user.lastClick += dt
           @user.tile.x = atom.input.mouse.x - @user.mouseOffset.x
           @user.tile.y = atom.input.mouse.y - @user.mouseOffset.y
+          
+          diff =
+            x : atom.input.mouse.x - @user.lastMouse.x
+            y : atom.input.mouse.y - @user.lastMouse.y
+            
+          # wiggling the pieces as you drag them
+          magnitude = Math.abs(diff.x) + Math.abs(diff.y)
+          sign      = if diff.x > 0 then 1 else -1
+          
+          newRotation = Math.log(magnitude)*0.16*sign unless magnitude is 0
+          @user.tile.rotation = newRotation unless Math.abs(newRotation) < 0.09 or !(newRotation?)
+              
+          @user.lastMouse =
+            x : atom.input.mouse.x
+            y : atom.input.mouse.y
       
     
     triggers :

@@ -13,6 +13,11 @@ define ->
       audio : null
       time  : 0
     
+    BAD_MOVEINVALID :
+      text  : 'Illegal move!'
+      audio : null
+      time  : 100
+    
     NEUTRAL_GAMERULES1 :
       text  : 'This game is won by scoring.\nThe player who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.'
       audio : 'gamerules1'
@@ -34,15 +39,15 @@ define ->
       time  : 300
     
     
-    BAD_REDSTURN :
-      text  : 'It\'s Red\'s turn.'
+    NEUTRAL_REDSTURN :
+      text  : 'Red\'s turn.'
       audio : null
-      time  : 200
+      time  : Infinity
     
-    BAD_BLACKSTURN :
-      text  : 'It\'s Black\'s turn.'
+    NEUTRAL_BLACKSTURN :
+      text  : 'Black\'s turn.'
       audio : null
-      time  : 200
+      time  : Infinity
     
     current       : 'NEUTRAL_BOARDSETUP'
     type          : 'text'

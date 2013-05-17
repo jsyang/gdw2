@@ -61,7 +61,6 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
         }
         t.invalidPlacement = false;
       }
-      this.user.layout.array = layout;
       return true;
     };
 
@@ -183,7 +182,6 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
       lastTile: null,
       tile: null,
       layout: {
-        array: null,
         x: 0,
         y: 0,
         bx: 0,
@@ -223,7 +221,8 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
           if (this.findUIThing('tiles')) {
             mouse = this.translateMouseToLayout();
             if ((this.user.tile === this.user.lastTile) || (this.user.tile.getOuterCell(mouse.x, mouse.y) > 0) || (this.user.moves > 0 && (mouse.x !== this.user.lastMove.x && mouse.y !== this.user.lastMove.y))) {
-              return this.triggers.addhighlightbutton.apply(this);
+              this.triggers.addhighlightbutton.apply(this);
+              return this.triggers.showbadmove.call(this);
             } else {
               this.user.tile.setOuterCell(mouse.x, mouse.y, this.user.color);
               this.user.lastTile = this.user.tile;
@@ -237,8 +236,9 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
               atom.playSound('crack');
               if (!this.checkIfPlayerHasMovesLeft()) {
                 alert('No moves left for ' + this.user.COLORS[this.user.color] + '!');
-                return this.triggers.calculatescores.call(this);
+                this.triggers.calculatescores.call(this);
               }
+              return this.triggers.showwhosturn.call(this);
             }
           } else if (this.findUIThing('buttons')) {
             atom.playSound('drop');
@@ -250,6 +250,7 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
       },
       select: function(dt) {
         var front, frontIndex;
+        this.user.lastClick += dt;
         if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
           if (this.findUIThing('tiles')) {
             if (this.user.lastTile === this.user.tile && this.user.lastClick < 0.3) {
@@ -269,7 +270,6 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
               atom.playSound('pick');
             }
           }
-          this.user.lastClick += dt;
         }
         if (atom.input.pressed('touchfinger') || atom.input.pressed('mouseleft')) {
           if (this.findUIThing('buttons')) {
@@ -282,6 +282,7 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
       },
       move: function(dt) {
         var diff, magnitude, newRotation, sign;
+        this.user.lastClick += dt;
         if ((atom.input.released('touchfinger') || atom.input.released('mouseleft')) && (this.user.tile != null)) {
           this.user.lastClick = 0;
           this.mode.current = 'select';
@@ -318,6 +319,16 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
     };
 
     Kulami.prototype.triggers = {
+      showbadmove: function() {
+        return this.instructions.set({
+          name: 'BAD_MOVEINVALID'
+        });
+      },
+      showwhosturn: function() {
+        return this.instructions.set({
+          name: 'NEUTRAL_' + this.user.COLORS[this.user.color].toUpperCase() + 'STURN'
+        });
+      },
       addhighlightbutton: function() {
         atom.playSound('invalid');
         return this.buttons.highlightLastMove = new Button({
@@ -390,7 +401,8 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
         this.buttons.help.clicked = 'showgameruleshelp';
         this.mode.current = 'play';
         this.user.lastTile = null;
-        return atom.playSound('valid');
+        atom.playSound('valid');
+        return this.triggers.showwhosturn.call(this);
       },
       generaterandomlayout: function() {
         return this.createRandomLayout();

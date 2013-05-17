@@ -15,6 +15,12 @@ define(function() {
       time: 0
     };
 
+    Instructions.prototype.BAD_MOVEINVALID = {
+      text: 'Illegal move!',
+      audio: null,
+      time: 100
+    };
+
     Instructions.prototype.NEUTRAL_GAMERULES1 = {
       text: 'This game is won by scoring.\nThe player who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.',
       audio: 'gamerules1',
@@ -39,16 +45,16 @@ define(function() {
       time: 300
     };
 
-    Instructions.prototype.BAD_REDSTURN = {
-      text: 'It\'s Red\'s turn.',
+    Instructions.prototype.NEUTRAL_REDSTURN = {
+      text: 'Red\'s turn.',
       audio: null,
-      time: 200
+      time: Infinity
     };
 
-    Instructions.prototype.BAD_BLACKSTURN = {
-      text: 'It\'s Black\'s turn.',
+    Instructions.prototype.NEUTRAL_BLACKSTURN = {
+      text: 'Black\'s turn.',
       audio: null,
-      time: 200
+      time: Infinity
     };
 
     Instructions.prototype.current = 'NEUTRAL_BOARDSETUP';

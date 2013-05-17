@@ -39,7 +39,6 @@ define [
               return false
         t.invalidPlacement = false
       
-      @user.layout.array = layout
       return true
       
     
@@ -160,8 +159,6 @@ define [
       tile        : null  # currently clicked tile
 
       layout    :
-        # used to calculate whether or not a player has any moves left
-        array : null
         # units for these coords are in tiles, not pixels
         x   : 0   
         y   : 0
@@ -205,6 +202,8 @@ define [
               
               # already played here. illegal move
               @triggers.addhighlightbutton.apply(@)
+              @triggers.showbadmove.call(@)
+              
             else
               @user.tile.setOuterCell(mouse.x, mouse.y, @user.color)
               @user.lastTile = @user.tile
@@ -220,6 +219,8 @@ define [
                 alert('No moves left for '+@user.COLORS[@user.color]+'!')
                 @triggers.calculatescores.call(@)
           
+              @triggers.showwhosturn.call(@)
+          
           else if @findUIThing('buttons')
             atom.playSound('drop')
             @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
@@ -227,11 +228,15 @@ define [
           
       
       select : (dt) ->
+        
+        @user.lastClick += dt
+        
         if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
         
           if @findUIThing('tiles')
             # double click to change orientation
             if @user.lastTile is @user.tile and @user.lastClick < 0.3
+              
               @user.tile.transposeOrientation()
               atom.playSound('drop')
               @user.lastTile = null
@@ -249,7 +254,7 @@ define [
               
               atom.playSound('pick')
             
-          @user.lastClick += dt  
+        
         
         if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
           if @findUIThing('buttons')
@@ -257,6 +262,9 @@ define [
             @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
             
       move : (dt) ->
+        
+        @user.lastClick += dt
+        
         if (atom.input.released('touchfinger') or atom.input.released('mouseleft')) and @user.tile?
           # dropped
           @user.lastClick = 0
@@ -292,6 +300,12 @@ define [
       
     
     triggers :
+      showbadmove : ->
+        @instructions.set({ name : 'BAD_MOVEINVALID' })
+      
+      showwhosturn : ->
+        @instructions.set({ name : 'NEUTRAL_'+@user.COLORS[@user.color].toUpperCase()+'STURN' })
+      
       addhighlightbutton : ->
         atom.playSound('invalid')
         
@@ -351,6 +365,7 @@ define [
         @mode.current = 'play'
         @user.lastTile = null
         atom.playSound('valid')
+        @triggers.showwhosturn.call(@)
         
       generaterandomlayout : -> @createRandomLayout()
       

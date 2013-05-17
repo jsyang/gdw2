@@ -16,46 +16,48 @@ define(function() {
     };
 
     Instructions.prototype.NEUTRAL_GAMERULES1 = {
-      text: 'Kulami\n\nThis game is won by scoring.\nA player who owns the most cells wins.\nOn each turn, a player places a marble in an empty spot on a tile.',
-      audio: null,
-      time: 0
+      text: 'This game is won by scoring.\nThe player who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.',
+      audio: 'gamerules1',
+      time: 700
     };
 
     Instructions.prototype.NEUTRAL_GAMERULES2 = {
-      text: 'A tile (and its entire collection of cells) is owned by a player when the majority of its marbles are that player\'s color.',
-      audio: null,
-      time: 0
+      text: 'A player owns a tile when his marbles\ntake up a majority of the cells on the tile.',
+      audio: 'gamerules2',
+      time: 400
     };
 
     Instructions.prototype.NEUTRAL_GAMERULES3 = {
-      text: 'On each turn, a player places a marble in an empty spot on a tile that does not contain the marble placed in the previous turn.\nThe move is legal only if it lies on the same row or column as the last turn.',
-      audio: null,
-      time: 0
+      text: 'Players take turns placing one marble (per turn)\nin an empty cell on a tile that doesn\'t contain\nthe last move.\nA move is legal only if it lies on the same row\nor column as the last marble played.',
+      audio: 'gamerules3',
+      time: 900
     };
 
     Instructions.prototype.NEUTRAL_GAMERULES4 = {
-      text: 'The game ends when a player has no legal moves left on their turn.',
-      audio: null,
-      time: 0
+      text: 'The game ends when a player has\nno legal moves left on their turn.',
+      audio: 'gamerules4',
+      time: 300
     };
 
     Instructions.prototype.BAD_REDSTURN = {
       text: 'It\'s Red\'s turn.',
       audio: null,
-      time: 0
+      time: 200
     };
 
     Instructions.prototype.BAD_BLACKSTURN = {
       text: 'It\'s Black\'s turn.',
       audio: null,
-      time: 0
+      time: 200
     };
 
-    Instructions.prototype.timer = 600;
+    Instructions.prototype.current = 'NEUTRAL_BOARDSETUP';
 
     Instructions.prototype.type = 'text';
 
-    Instructions.prototype.current = 'NEUTRAL_BOARDSETUP';
+    Instructions.prototype.timer = 600;
+
+    Instructions.prototype.sequenceIndex = null;
 
     Instructions.prototype.game = null;
 
@@ -65,9 +67,7 @@ define(function() {
         v = params[k];
         this[k] = v;
       }
-      ({
-        HELP: [this.NEUTRAL_GAMERULES1, this.NEUTRAL_GAMERULES2, this.NEUTRAL_GAMERULES3, this.NEUTRAL_GAMERULES4]
-      });
+      this.HELP = [this.NEUTRAL_GAMERULES1, this.NEUTRAL_GAMERULES2, this.NEUTRAL_GAMERULES3, this.NEUTRAL_GAMERULES4];
     }
 
     Instructions.prototype.clear = function() {
@@ -75,15 +75,33 @@ define(function() {
     };
 
     Instructions.prototype.set = function(params) {
+      var item;
       if (params != null) {
-        this.current = params.name;
-        this.timer = this[this.current].time;
-        return this.type = params.type != null ? params.type : 'text';
+        if (params.name) {
+          this.current = params.name;
+        }
+        if (this[this.current] instanceof Array) {
+          item = this[this.current][0];
+        } else {
+          item = this[this.current];
+        }
+        this.timer = params.time != null ? params.time : item.time;
+        this.type = params.type != null ? params.type : 'text';
+        return this.sequenceIndex = 0;
+      }
+    };
+
+    Instructions.prototype.nextInSequence = function() {
+      this.sequenceIndex++;
+      if (this.sequenceIndex < this[this.current].length) {
+        return this.timer = this[this.current][this.sequenceIndex].time;
+      } else {
+        return this.clear();
       }
     };
 
     Instructions.prototype.draw = function() {
-      var ac, i, l, text, _i, _len;
+      var ac, audio, i, isSequence, item, l, text, _i, _len;
       if (this.current != null) {
         switch (this.type) {
           case 'text':
@@ -91,7 +109,17 @@ define(function() {
               ac = atom.context;
               ac.font = 'bold 20px Helvetica';
               ac.fillStyle = '#222';
-              text = this[this.current].text.split('\n');
+              isSequence = this[this.current] instanceof Array;
+              if (isSequence) {
+                item = this[this.current][this.sequenceIndex];
+              } else {
+                item = this[this.current];
+              }
+              text = item.text.split('\n');
+              audio = item.audio;
+              if ((audio != null) && this.timer === item.time) {
+                atom.playSound(audio);
+              }
               i = 0;
               for (_i = 0, _len = text.length; _i < _len; _i++) {
                 l = text[_i];
@@ -99,6 +127,9 @@ define(function() {
                 i++;
               }
               this.timer--;
+              if (isSequence && this.timer === 0) {
+                this.nextInSequence();
+              }
             }
             break;
           case 'alert':

@@ -14,39 +14,40 @@ define ->
       time  : 0
     
     NEUTRAL_GAMERULES1 :
-      text  : 'Kulami\n\nThis game is won by scoring.\nA player who owns the most cells wins.\nOn each turn, a player places a marble in an empty spot on a tile.'
-      audio : null
-      time  : 0
+      text  : 'This game is won by scoring.\nThe player who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.'
+      audio : 'gamerules1'
+      time  : 700
       
     NEUTRAL_GAMERULES2 :
-      text  : 'A tile (and its entire collection of cells) is owned by a player when the majority of its marbles are that player\'s color.'
-      audio : null
-      time  : 0
+      text  : 'A player owns a tile when his marbles\ntake up a majority of the cells on the tile.'
+      audio : 'gamerules2'
+      time  : 400
 
     NEUTRAL_GAMERULES3 :
-      text  : 'On each turn, a player places a marble in an empty spot on a tile that does not contain the marble placed in the previous turn.\nThe move is legal only if it lies on the same row or column as the last turn.'
-      audio : null
-      time  : 0
+      text  : 'Players take turns placing one marble (per turn)\nin an empty cell on a tile that doesn\'t contain\nthe last move.\nA move is legal only if it lies on the same row\nor column as the last marble played.'
+      audio : 'gamerules3'
+      time  : 900
       
     NEUTRAL_GAMERULES4 :
-      text  : 'The game ends when a player has no legal moves left on their turn.'
-      audio : null
-      time  : 0
+      text  : 'The game ends when a player has\nno legal moves left on their turn.'
+      audio : 'gamerules4'
+      time  : 300
     
     
     BAD_REDSTURN :
       text  : 'It\'s Red\'s turn.'
       audio : null
-      time  : 0
+      time  : 200
     
     BAD_BLACKSTURN :
       text  : 'It\'s Black\'s turn.'
       audio : null
-      time  : 0 # milliseconds
+      time  : 200
     
-    timer : 600
-    type : 'text'
-    current : 'NEUTRAL_BOARDSETUP'
+    current       : 'NEUTRAL_BOARDSETUP'
+    type          : 'text'
+    timer         : 600
+    sequenceIndex : null
     
     game : null # ref to parent game
     
@@ -54,36 +55,69 @@ define ->
       @[k] = v for k, v of params
       
       # add HELP sequence
-      HELP : [
+      @HELP = [
         @NEUTRAL_GAMERULES1
         @NEUTRAL_GAMERULES2
         @NEUTRAL_GAMERULES3
         @NEUTRAL_GAMERULES4
       ]
     
-    clear : -> @current = null
+    clear : ->
+      @current = null
     
     set : (params)->
       if params?
-        @current  = params.name
-        @timer    = @[@current].time
-        @type     = if params.type? then params.type else 'text'
+        @current        = params.name if params.name
+        if @[@current] instanceof Array
+          item          = @[@current][0]
+        else
+          item          = @[@current]
+        @timer          = if params.time? then params.time else item.time
+        @type           = if params.type? then params.type else 'text'
+        @sequenceIndex  = 0
     
+    nextInSequence : ->
+      @sequenceIndex++
+      if @sequenceIndex < @[@current].length
+        @timer = @[@current][@sequenceIndex].time
+      else
+        @clear()
+        
     draw : ->
       if @current?
         switch @type
           when 'text'
             if @timer > 0
+              
               ac = atom.context
               ac.font = 'bold 20px Helvetica';
               ac.fillStyle = '#222'
               
-              text = @[@current].text.split('\n')
+              isSequence = @[@current] instanceof Array
+              
+              if isSequence
+                item = @[@current][@sequenceIndex]
+              else
+                item = @[@current]
+                
+              text  = item.text.split('\n')
+              audio = item.audio
+                
+                
+              if audio? and @timer is item.time
+                atom.playSound(audio)
+              
               i = 0
               for l in text
                 ac.fillText(l.toUpperCase(), 10, atom.height-(20*(text.length-i)))
                 i++
+                
               @timer--
+              
+              # Play these messages consecutively
+              if isSequence and @timer is 0
+                @nextInSequence()
+              
           when 'alert'
             if @timer > 0
               alert(@[@current].text)

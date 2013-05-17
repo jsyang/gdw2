@@ -5,7 +5,8 @@ define [
 ], (_util, _atom, Kulami) ->
 
   startGame = ->
-    (new Kulami()).run()
+    window.q = new Kulami()
+    q.run()
   
   loaded =
     gfx : false
@@ -17,8 +18,7 @@ define [
       true
     else
       false
-  
-  
+    
   atom.preloadImages({
     cell_       : 'cell_.png'
     cell_red    : 'cell_red.png'
@@ -33,11 +33,15 @@ define [
   )
   
   atom.preloadSounds({
-    crack   : 'crack.mp3'
-    pick    : 'pick.mp3'
-    drop    : 'drop.mp3'
-    invalid : 'invalid.wav'
-    valid   : 'valid.wav'
+    crack       : 'crack.mp3'
+    pick        : 'pick.mp3'
+    drop        : 'drop.mp3'
+    invalid     : 'invalid.wav'
+    valid       : 'valid.wav'
+    gamerules1  : 'gamerules1.mp3'
+    gamerules2  : 'gamerules2.mp3'
+    gamerules3  : 'gamerules3.mp3'
+    gamerules4  : 'gamerules4.mp3'
   }, ->
     loaded.sfx = true
     isPreloadComplete()

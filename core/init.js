@@ -2,7 +2,8 @@
 define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
   var isPreloadComplete, loaded, startGame;
   startGame = function() {
-    return (new Kulami()).run();
+    window.q = new Kulami();
+    return q.run();
   };
   loaded = {
     gfx: false,
@@ -32,7 +33,11 @@ define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
     pick: 'pick.mp3',
     drop: 'drop.mp3',
     invalid: 'invalid.wav',
-    valid: 'valid.wav'
+    valid: 'valid.wav',
+    gamerules1: 'gamerules1.mp3',
+    gamerules2: 'gamerules2.mp3',
+    gamerules3: 'gamerules3.mp3',
+    gamerules4: 'gamerules4.mp3'
   }, function() {
     loaded.sfx = true;
     return isPreloadComplete();

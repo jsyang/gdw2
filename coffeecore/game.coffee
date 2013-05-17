@@ -219,8 +219,10 @@ define [
               if !@checkIfPlayerHasMovesLeft()
                 alert('No moves left for '+@user.COLORS[@user.color]+'!')
                 @triggers.calculatescores.call(@)
-              
-              
+          
+          else if @findUIThing('buttons')
+            atom.playSound('drop')
+            @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
               
           
       
@@ -342,7 +344,10 @@ define [
         ) for t in @tiles
         @triggers.removestartbutton.call(@)
         @triggers.removerandomlayoutbutton.call(@)
-        @triggers.removehelpbutton.call(@)
+        #@triggers.removehelpbutton.call(@)
+        # Use it for instructions instead
+        @buttons.help.clicked = 'showgameruleshelp'
+        
         @mode.current = 'play'
         @user.lastTile = null
         atom.playSound('valid')
@@ -376,6 +381,9 @@ define [
         alert("Final scores:\nRED\t\t#{scores.red}\nBLACK\t#{scores.black}")
         
         @mode.current = 'gameover'
+      
+      showgameruleshelp : ->
+        @instructions.set({ name : 'HELP' })
       
       showtileplacementhelp : ->
         @instructions.set({ name : 'NEUTRAL_BOARDSETUP' })

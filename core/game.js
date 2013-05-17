@@ -240,6 +240,11 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
                 return this.triggers.calculatescores.call(this);
               }
             }
+          } else if (this.findUIThing('buttons')) {
+            atom.playSound('drop');
+            if (this.user.lastButton.clicked != null) {
+              return this.triggers[this.user.lastButton.clicked].apply(this);
+            }
           }
         }
       },
@@ -382,7 +387,7 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
         }
         this.triggers.removestartbutton.call(this);
         this.triggers.removerandomlayoutbutton.call(this);
-        this.triggers.removehelpbutton.call(this);
+        this.buttons.help.clicked = 'showgameruleshelp';
         this.mode.current = 'play';
         this.user.lastTile = null;
         return atom.playSound('valid');
@@ -425,6 +430,11 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
         }
         alert("Final scores:\nRED\t\t" + scores.red + "\nBLACK\t" + scores.black);
         return this.mode.current = 'gameover';
+      },
+      showgameruleshelp: function() {
+        return this.instructions.set({
+          name: 'HELP'
+        });
       },
       showtileplacementhelp: function() {
         return this.instructions.set({

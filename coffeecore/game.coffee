@@ -287,6 +287,8 @@ define [
     
     triggers :
       addhighlightbutton : ->
+        atom.playSound('invalid')
+        
         @buttons.highlightLastMove = new Button({
           x : (@user.layout.x + @user.lastMove.x)<<5
           y : (@user.layout.y + @user.lastMove.y)<<5
@@ -304,6 +306,9 @@ define [
     
       removerandomlayoutbutton : ->
         delete @buttons.randomLayout if @buttons.randomLayout?
+        
+      removehelpbutton : ->
+        delete @buttons.help if @buttons.help?
     
       removestartbutton : ->
         delete @buttons.start if @buttons.start?
@@ -322,7 +327,8 @@ define [
           b.color =
             pressed : '#0a0'
             up      : '#aeb'
-          b.clicked = null
+            opacity : 0.75
+          b.clicked = 'invalidstart'
         
       startgame : ->
         (
@@ -332,9 +338,13 @@ define [
         ) for t in @tiles
         @triggers.removestartbutton.call(@)
         @triggers.removerandomlayoutbutton.call(@)
+        @triggers.removehelpbutton.call(@)
         @mode.current = 'play'
+        atom.playSound('valid')
         
       generaterandomlayout : -> @createRandomLayout()
+      
+      invalidstart : -> atom.playSound('invalid')
       
       calculatescores : ->
         scores =
@@ -429,6 +439,9 @@ define [
       # make sure we don't waste them precious cycles.
       window.onblur = => @stop
       window.onfocus = => @run
+      
+      # initially, you can't play
+      @triggers.disablestartbutton.call(@)
       
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])

@@ -4,7 +4,7 @@ define ->
     # each string is prefaced with a mood so the key for it is searchable
     
     NEUTRAL_BOARDSETUP :
-      text  : 'Drag the tiles to form a board of \nnon-overlapping tiles. Overlapped\ntiles are outlined in red.'
+      text  : 'Drag the tiles to form a board of \nnon-overlapping tiles. Overlapped\ntiles are outlined in red.\nDouble click a tile to change its rotation.'
       audio : null
       time  : 1000 # game cycles
     

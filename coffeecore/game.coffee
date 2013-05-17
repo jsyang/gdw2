@@ -320,7 +320,7 @@ define [
           h : 32
           clicked : null
           color :
-            opacity : 0.75
+            opacity : 0.5
             pressed : '#F7C839'
             up      : '#F7C839'
         })

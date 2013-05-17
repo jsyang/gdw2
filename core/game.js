@@ -1,7 +1,7 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/tile', 'core/button'], function(MoveTile, Button) {
+define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, Button, Instructions) {
   var Kulami;
   return Kulami = (function(_super) {
 
@@ -36,7 +36,7 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
     };
 
     Kulami.prototype.verifyLayoutValid = function() {
-      var i, layout, minX, minY, t, x, y, _i, _j, _k, _len, _ref, _ref1, _ref2;
+      var i, layout, minX, minY, t, x, y, _i, _j, _k, _ref, _ref1, _ref2;
       this.getLayoutOrigin();
       layout = (function() {
         var _i, _ref, _results;
@@ -46,9 +46,8 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         }
         return _results;
       }).call(this);
-      _ref = this.tiles;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        t = _ref[_i];
+      for (i = _i = _ref = this.tiles.length - 1; _ref <= 0 ? _i <= 0 : _i >= 0; i = _ref <= 0 ? ++_i : --_i) {
+        t = this.tiles[i];
         minX = this.user.layout.x + (t.x >> 5);
         minY = this.user.layout.y + (t.y >> 5);
         for (y = _j = 0, _ref1 = t.h; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; y = 0 <= _ref1 ? ++_j : --_j) {
@@ -158,7 +157,6 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         tileToPlace.x = x << 5;
         tileToPlace.y = y << 5;
         if (!tryLayingTile(tileToPlace)) {
-          console.log(this.tiles.length);
           this.tiles = this.tiles.concat(tilePool);
           return false;
         }
@@ -235,12 +233,12 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
               }
               this.triggers.removehighlightbutton.apply(this);
               this.user.lastMove = mouse;
+              this.user.moves++;
+              atom.playSound('crack');
               if (!this.checkIfPlayerHasMovesLeft()) {
                 alert('No moves left for ' + this.user.COLORS[this.user.color] + '!');
-                this.triggers.calculatescores.call(this);
+                return this.triggers.calculatescores.call(this);
               }
-              this.user.moves++;
-              return atom.playSound('crack');
             }
           }
         }
@@ -258,9 +256,11 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
               this.mode.current = 'move';
               this.user.lastTile = this.user.tile;
               frontIndex = this.tiles.indexOf(this.user.lastTile);
-              front = this.tiles[frontIndex];
-              this.tiles.splice(frontIndex, 1);
-              this.tiles.push(front);
+              if (frontIndex !== this.tiles.length - 1) {
+                front = this.tiles[frontIndex];
+                this.tiles.splice(frontIndex, 1);
+                this.tiles.push(front);
+              }
               atom.playSound('pick');
             }
           }
@@ -384,6 +384,7 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         this.triggers.removerandomlayoutbutton.call(this);
         this.triggers.removehelpbutton.call(this);
         this.mode.current = 'play';
+        this.user.lastTile = null;
         return atom.playSound('valid');
       },
       generaterandomlayout: function() {
@@ -424,6 +425,11 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         }
         alert("Final scores:\nRED\t\t" + scores.red + "\nBLACK\t" + scores.black);
         return this.mode.current = 'gameover';
+      },
+      showtileplacementhelp: function() {
+        return this.instructions.set({
+          name: 'NEUTRAL_BOARDSETUP'
+        });
       }
     };
 
@@ -444,7 +450,7 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         }
       }),
       start: new Button({
-        x: atom.width - 100,
+        x: atom.width - 347,
         y: atom.height - 60,
         w: 90,
         h: 50,
@@ -457,19 +463,21 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         }
       }),
       help: new Button({
-        x: atom.width - 347,
+        x: atom.width - 100,
         y: atom.height - 60,
         w: 89,
         h: 50,
         shape: 'image',
         image: 'button_help',
-        clicked: null,
+        clicked: 'showtileplacementhelp',
         color: {
           pressed: '#0a0',
           up: '#3e8'
         }
       })
     };
+
+    Kulami.prototype.instructions = new Instructions();
 
     function Kulami() {
       var i, k, makeTile, tileList, v, _i,
@@ -483,8 +491,8 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
       makeTile = function(size) {
         return _this.tiles.push(new MoveTile({
           size: size,
-          x: $$.R(1, 300),
-          y: $$.R(1, 300)
+          x: $$.R(1, 200),
+          y: $$.R(1, 200)
         }));
       };
       for (k in tileList) {
@@ -509,7 +517,7 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
     };
 
     Kulami.prototype.draw = function() {
-      var k, t, v, _i, _len, _ref, _ref1, _results;
+      var k, t, v, _i, _len, _ref, _ref1;
       atom.context.clear();
       _ref = this.tiles;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -517,12 +525,11 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         t.draw();
       }
       _ref1 = this.buttons;
-      _results = [];
       for (k in _ref1) {
         v = _ref1[k];
-        _results.push(v.draw());
+        v.draw();
       }
-      return _results;
+      return this.instructions.draw();
     };
 
     return Kulami;

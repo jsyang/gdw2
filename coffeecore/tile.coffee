@@ -68,7 +68,7 @@ define ->
             @CELLSIZE*(j-@h*0.5) + @CELLSIZE*0.5
           ]
           
-          ac.globalAlpha = if @invalidPlacement then 0.4 else 1
+          #ac.globalAlpha = if @invalidPlacement then 0.4 else 1
 
           if @cells? and @cells[@w*j+i] > 0
             if @cells[@w*j+i] is 1

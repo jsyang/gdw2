@@ -4,9 +4,9 @@ define(function() {
   return Instructions = (function() {
 
     Instructions.prototype.NEUTRAL_BOARDSETUP = {
-      text: 'Drag the tiles to form a board.\nA illegaly placed tile becomes translucent.\nHit the GO button to start the game.',
+      text: 'Drag the tiles to form a board of \nnon-overlapping tiles. Overlapped\ntiles are outlined in red.',
       audio: null,
-      time: 0
+      time: 1000
     };
 
     Instructions.prototype.BAD_BOARDINVALID = {
@@ -16,7 +16,7 @@ define(function() {
     };
 
     Instructions.prototype.NEUTRAL_GAMERULES1 = {
-      text: 'This game is won by scoring.\nA player who owns the most cells wins.\nOn each turn, a player places a marble in an empty spot on a tile.',
+      text: 'Kulami\n\nThis game is won by scoring.\nA player who owns the most cells wins.\nOn each turn, a player places a marble in an empty spot on a tile.',
       audio: null,
       time: 0
     };
@@ -51,7 +51,11 @@ define(function() {
       time: 0
     };
 
+    Instructions.prototype.timer = 600;
+
     Instructions.prototype.type = 'text';
+
+    Instructions.prototype.current = 'NEUTRAL_BOARDSETUP';
 
     Instructions.prototype.game = null;
 
@@ -66,7 +70,45 @@ define(function() {
       });
     }
 
-    Instructions.prototype.draw = function() {};
+    Instructions.prototype.clear = function() {
+      return this.current = null;
+    };
+
+    Instructions.prototype.set = function(params) {
+      if (params != null) {
+        this.current = params.name;
+        this.timer = this[this.current].time;
+        return this.type = params.type != null ? params.type : 'text';
+      }
+    };
+
+    Instructions.prototype.draw = function() {
+      var ac, i, l, text, _i, _len;
+      if (this.current != null) {
+        switch (this.type) {
+          case 'text':
+            if (this.timer > 0) {
+              ac = atom.context;
+              ac.font = 'bold 20px Helvetica';
+              ac.fillStyle = '#222';
+              text = this[this.current].text.split('\n');
+              i = 0;
+              for (_i = 0, _len = text.length; _i < _len; _i++) {
+                l = text[_i];
+                ac.fillText(l.toUpperCase(), 10, atom.height - (20 * (text.length - i)));
+                i++;
+              }
+              this.timer--;
+            }
+            break;
+          case 'alert':
+            if (this.timer > 0) {
+              alert(this[this.current].text);
+              this.clear();
+            }
+        }
+      }
+    };
 
     return Instructions;
 

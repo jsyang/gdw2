@@ -95,7 +95,6 @@ define(function() {
       for (j = _i = 0, _ref = this.h; 0 <= _ref ? _i < _ref : _i > _ref; j = 0 <= _ref ? ++_i : --_i) {
         for (i = _j = 0, _ref1 = this.w; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
           _ref2 = [this.CELLSIZE * (i - this.w * 0.5), this.CELLSIZE * (j - this.h * 0.5), this.CELLSIZE, this.CELLSIZE, this.CELLSIZE * (i - this.w * 0.5) + this.CELLSIZE * 0.5, this.CELLSIZE * (j - this.h * 0.5) + this.CELLSIZE * 0.5], x = _ref2[0], y = _ref2[1], w = _ref2[2], h = _ref2[3], cx = _ref2[4], cy = _ref2[5];
-          ac.globalAlpha = this.invalidPlacement ? 0.4 : 1;
           if ((this.cells != null) && this.cells[this.w * j + i] > 0) {
             if (this.cells[this.w * j + i] === 1) {
               img = atom.gfx.cell_red;

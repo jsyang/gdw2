@@ -1,7 +1,8 @@
 define [
   'core/tile'
   'core/button'
-], (MoveTile, Button) ->
+  'core/instructions'
+], (MoveTile, Button, Instructions) ->
     
   class Kulami extends atom.Game
     
@@ -26,7 +27,8 @@ define [
     verifyLayoutValid : ->
       @getLayoutOrigin()
       layout = ( 0 for i in [0...(@user.layout.bx+1)*(@user.layout.by+1)] )
-      for t in @tiles
+      for i in [@tiles.length-1..0]
+        t = @tiles[i]
         minX = @user.layout.x + (t.x>>5)
         minY = @user.layout.y + (t.y>>5)
         for y in [0...t.h]
@@ -126,7 +128,6 @@ define [
         tileToPlace.x = x<<5
         tileToPlace.y = y<<5
         if !tryLayingTile(tileToPlace)
-          console.log(@tiles.length)
           @tiles = @tiles.concat(tilePool)
           return false
         x = tileToPlace.x>>5
@@ -211,13 +212,15 @@ define [
               if @user.color > 2 then @user.color = 1
               @triggers.removehighlightbutton.apply(@)
               @user.lastMove = mouse
-                
+              
+              @user.moves++
+              atom.playSound('crack')
+              
               if !@checkIfPlayerHasMovesLeft()
                 alert('No moves left for '+@user.COLORS[@user.color]+'!')
                 @triggers.calculatescores.call(@)
               
-              @user.moves++
-              atom.playSound('crack')
+              
               
           
       
@@ -237,9 +240,10 @@ define [
               @user.lastTile = @user.tile
               
               frontIndex  = @tiles.indexOf(@user.lastTile)
-              front       = @tiles[frontIndex]
-              @tiles.splice(frontIndex, 1)
-              @tiles.push(front)
+              if frontIndex != @tiles.length-1
+                front       = @tiles[frontIndex]
+                @tiles.splice(frontIndex, 1)
+                @tiles.push(front)
               
               atom.playSound('pick')
             
@@ -340,6 +344,7 @@ define [
         @triggers.removerandomlayoutbutton.call(@)
         @triggers.removehelpbutton.call(@)
         @mode.current = 'play'
+        @user.lastTile = null
         atom.playSound('valid')
         
       generaterandomlayout : -> @createRandomLayout()
@@ -371,6 +376,9 @@ define [
         alert("Final scores:\nRED\t\t#{scores.red}\nBLACK\t#{scores.black}")
         
         @mode.current = 'gameover'
+      
+      showtileplacementhelp : ->
+        @instructions.set({ name : 'NEUTRAL_BOARDSETUP' })
     
     tiles : []
     
@@ -390,7 +398,7 @@ define [
       })
       
       start : new Button({
-        x : atom.width - 100
+        x : atom.width - 347
         y : atom.height - 60
         w : 90
         h : 50
@@ -403,17 +411,19 @@ define [
       })
     
       help : new Button({
-        x : atom.width - 347
+        x : atom.width - 100
         y : atom.height - 60
         w : 89
         h : 50
         shape : 'image'
         image : 'button_help'
-        clicked : null
+        clicked : 'showtileplacementhelp'
         color :
           pressed : '#0a0'
           up      : '#3e8'
       })
+    
+    instructions : new Instructions()
     
     constructor : ->
       tileList =  # The full list for kulami.
@@ -426,8 +436,8 @@ define [
         @tiles.push(
           new MoveTile({
             size
-            x     : $$.R(1,300)
-            y     : $$.R(1,300)
+            x     : $$.R(1,200)
+            y     : $$.R(1,200)
           })
         )
       
@@ -450,4 +460,6 @@ define [
       atom.context.clear()
       t.draw() for t in @tiles
       v.draw() for k,v of @buttons
+      
+      @instructions.draw()
       

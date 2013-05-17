@@ -57,6 +57,12 @@ define(function() {
       time: Infinity
     };
 
+    Instructions.prototype.NEUTRAL_GAMEOVER = {
+      text: 'Game over!',
+      audio: null,
+      time: Infinity
+    };
+
     Instructions.prototype.current = 'NEUTRAL_BOARDSETUP';
 
     Instructions.prototype.type = 'text';

@@ -235,10 +235,12 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
               this.user.moves++;
               atom.playSound('crack');
               if (!this.checkIfPlayerHasMovesLeft()) {
+                this.triggers.showgameover.call(this);
                 alert('No moves left for ' + this.user.COLORS[this.user.color] + '!');
-                this.triggers.calculatescores.call(this);
+                return this.triggers.calculatescores.call(this);
+              } else {
+                return this.triggers.showwhosturn.call(this);
               }
-              return this.triggers.showwhosturn.call(this);
             }
           } else if (this.findUIThing('buttons')) {
             atom.playSound('drop');
@@ -319,6 +321,11 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
     };
 
     Kulami.prototype.triggers = {
+      showgameover: function() {
+        return this.instructions.set({
+          name: 'NEUTRAL_GAMEOVER'
+        });
+      },
       showbadmove: function() {
         return this.instructions.set({
           name: 'BAD_MOVEINVALID'

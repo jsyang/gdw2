@@ -38,7 +38,6 @@ define ->
       audio : 'gamerules4'
       time  : 300
     
-    
     NEUTRAL_REDSTURN :
       text  : 'Red\'s turn.'
       audio : null
@@ -46,6 +45,11 @@ define ->
     
     NEUTRAL_BLACKSTURN :
       text  : 'Black\'s turn.'
+      audio : null
+      time  : Infinity
+      
+    NEUTRAL_GAMEOVER :
+      text  : 'Game over!'
       audio : null
       time  : Infinity
     

@@ -216,10 +216,11 @@ define [
               atom.playSound('crack')
               
               if !@checkIfPlayerHasMovesLeft()
+                @triggers.showgameover.call(@)
                 alert('No moves left for '+@user.COLORS[@user.color]+'!')
                 @triggers.calculatescores.call(@)
-          
-              @triggers.showwhosturn.call(@)
+              else
+                @triggers.showwhosturn.call(@)
           
           else if @findUIThing('buttons')
             atom.playSound('drop')
@@ -300,6 +301,9 @@ define [
       
     
     triggers :
+      showgameover : ->
+        @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
+        
       showbadmove : ->
         @instructions.set({ name : 'BAD_MOVEINVALID' })
       

@@ -12,6 +12,8 @@ define(function() {
 
     Button.prototype.h = 0;
 
+    Button.prototype.shape = 'rect';
+
     Button.prototype.containsPoint = function(x, y) {
       return ((this.x <= x && x <= this.x + this.w)) && ((this.y <= y && y <= this.y + this.h));
     };
@@ -26,15 +28,21 @@ define(function() {
     Button.prototype.draw = function() {
       var ac;
       ac = atom.context;
-      ac.lineWidth = 2;
-      ac.strokeStyle = '#111';
-      ac.fillStyle = this.color[this.state];
       if (this.color.opacity != null) {
         ac.globalAlpha = this.color.opacity;
         ac.globalCompositeOperation = 'lighter';
       }
-      ac.fillRect(this.x, this.y, this.w, this.h);
-      ac.strokeRect(this.x, this.y, this.w, this.h);
+      switch (this.shape) {
+        case 'rect':
+          ac.lineWidth = 2;
+          ac.strokeStyle = '#111';
+          ac.fillStyle = this.color[this.state];
+          ac.fillRect(this.x, this.y, this.w, this.h);
+          ac.strokeRect(this.x, this.y, this.w, this.h);
+          break;
+        case 'image':
+          ac.drawImage(atom.gfx[this.image], this.x, this.y);
+      }
       if (this.color.opacity != null) {
         ac.globalAlpha = 1;
         return ac.globalCompositeOperation = 'source-over';

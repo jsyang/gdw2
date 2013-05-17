@@ -6,7 +6,7 @@ define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
     return (new Kulami()).run();
   };
   loaded = {
-    gfx: true,
+    gfx: false,
     sfx: false
   };
   isPreloadComplete = function() {
@@ -17,6 +17,17 @@ define(['core/util', 'core/atom', 'core/game'], function(_util, _atom, Kulami) {
       return false;
     }
   };
+  atom.preloadImages({
+    cell_: 'cell_.png',
+    cell_red: 'cell_red.png',
+    cell_black: 'cell_black.png',
+    button_random: 'button_random.png',
+    button_help: 'button_help.png',
+    button_play: 'button_play.png'
+  }, function() {
+    loaded.gfx = true;
+    return isPreloadComplete();
+  });
   atom.preloadSounds({
     crack: 'crack.mp3',
     pick: 'pick.mp3',

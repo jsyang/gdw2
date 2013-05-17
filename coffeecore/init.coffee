@@ -8,7 +8,7 @@ define [
     (new Kulami()).run()
   
   loaded =
-    gfx : true #false
+    gfx : false
     sfx : false
     
   isPreloadComplete = ->
@@ -19,13 +19,18 @@ define [
       false
   
   
-  # No GFX yet.
-  #atom.preloadImages({
-  #  ball : 'ball.png'
-  #}, ->
-  #  loaded.gfx = true
-  #  isPreloadComplete()
-  #)
+  atom.preloadImages({
+    cell_       : 'cell_.png'
+    cell_red    : 'cell_red.png'
+    cell_black  : 'cell_black.png'
+    
+    button_random : 'button_random.png'
+    button_help : 'button_help.png'
+    button_play : 'button_play.png'
+  }, ->
+    loaded.gfx = true
+    isPreloadComplete()
+  )
   
   atom.preloadSounds({
     crack : 'crack.mp3'

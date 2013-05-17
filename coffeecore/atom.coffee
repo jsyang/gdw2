@@ -153,6 +153,11 @@ define ->
     atom.height = atom.canvas.height
   window.onresize()
   
+  window.onorientationchange = (e) ->
+    atom.orientation = window.orientation
+    # todo: does this mean we should resize too?
+  window.onorientationchange()
+  
   class Game
     constructor: ->
     update: (dt) ->

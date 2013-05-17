@@ -80,14 +80,13 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
     };
 
     Kulami.prototype.findUIThing = function(thingType) {
-      var k, mx, my, t, v, _i, _len, _ref, _ref1;
+      var i, k, mx, my, t, v, _i, _ref, _ref1;
       mx = atom.input.mouse.x;
       my = atom.input.mouse.y;
       switch (thingType) {
         case 'tiles':
-          _ref = this.tiles;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            t = _ref[_i];
+          for (i = _i = _ref = this.tiles.length - 1; _ref <= 0 ? _i <= 0 : _i >= 0; i = _ref <= 0 ? ++_i : --_i) {
+            t = this.tiles[i];
             if (t.containsPoint(mx, my)) {
               this.user.tile = t;
               this.user.mouseOffset.x = mx - t.x;
@@ -118,13 +117,15 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
     };
 
     Kulami.prototype.createRandomLayout = function() {
-      var i, maxX, minX, tilePool, tileToPlace, tryLayingTile, x, y, _ref,
+      var holeChance, i, maxX, minX, tilePool, tileToPlace, tryLayingTile, x, y, _ref,
         _this = this;
       tilePool = this.tiles.slice();
       this.tiles = [];
-      _ref = [1, 1], x = _ref[0], y = _ref[1];
+      maxX = 10;
+      _ref = [((atom.width >> 5) - maxX) >> 1, 1], x = _ref[0], y = _ref[1];
       minX = x;
-      maxX = 16;
+      maxX += x;
+      holeChance = 0.6;
       this.user.layout.x = x;
       this.user.layout.y = y;
       tryLayingTile = function(t) {
@@ -132,7 +133,7 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         invalid = true;
         i = 0;
         while (invalid) {
-          if (i === 0) {
+          if (i === 0 && $$.r() > holeChance) {
             t.transposeOrientation();
           } else {
             t.x += 32;
@@ -144,7 +145,11 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
           i++;
           i %= 2;
           invalid = !_this.verifyLayoutValid();
+          if (t.y > 40 << 5) {
+            return false;
+          }
         }
+        return true;
       };
       while (tilePool.length > 0) {
         i = $$.R(0, tilePool.length - 1);
@@ -153,7 +158,11 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         this.tiles.push(tileToPlace);
         tileToPlace.x = x << 5;
         tileToPlace.y = y << 5;
-        tryLayingTile(tileToPlace);
+        if (!tryLayingTile(tileToPlace)) {
+          console.log(this.tiles.length);
+          this.tiles = this.tiles.concat(tilePool);
+          return false;
+        }
         x = tileToPlace.x >> 5;
         y = tileToPlace.y >> 5;
       }
@@ -238,6 +247,7 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
         }
       },
       select: function(dt) {
+        var front, frontIndex;
         if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
           if (this.findUIThing('tiles')) {
             if (this.user.lastTile === this.user.tile && this.user.lastClick < 0.3) {
@@ -248,6 +258,10 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
               this.user.lastClick = 0;
               this.mode.current = 'move';
               this.user.lastTile = this.user.tile;
+              frontIndex = this.tiles.indexOf(this.user.lastTile);
+              front = this.tiles[frontIndex];
+              this.tiles.splice(frontIndex, 1);
+              this.tiles.push(front);
               atom.playSound('pick');
             }
           }
@@ -309,8 +323,8 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
           clicked: null,
           color: {
             opacity: 0.75,
-            pressed: '#5a9',
-            up: '#5a9'
+            pressed: '#F7C839',
+            up: '#F7C839'
           }
         });
       },
@@ -406,10 +420,12 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
 
     Kulami.prototype.buttons = {
       randomLayout: new Button({
-        x: atom.width - 100,
-        y: 120,
-        w: 80,
-        h: 80,
+        x: atom.width - 248,
+        y: atom.height - 60,
+        w: 138,
+        h: 50,
+        shape: 'image',
+        image: 'button_random',
         clicked: 'generaterandomlayout',
         color: {
           pressed: '#d3f',
@@ -418,9 +434,24 @@ define(['core/tile', 'core/button'], function(MoveTile, Button) {
       }),
       start: new Button({
         x: atom.width - 100,
-        y: 20,
-        w: 80,
-        h: 80,
+        y: atom.height - 60,
+        w: 90,
+        h: 50,
+        shape: 'image',
+        image: 'button_play',
+        clicked: null,
+        color: {
+          pressed: '#0a0',
+          up: '#3e8'
+        }
+      }),
+      help: new Button({
+        x: atom.width - 347,
+        y: atom.height - 60,
+        w: 89,
+        h: 50,
+        shape: 'image',
+        image: 'button_help',
         clicked: null,
         color: {
           pressed: '#0a0',

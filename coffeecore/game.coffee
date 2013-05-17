@@ -53,7 +53,8 @@ define [
       
       switch thingType
         when 'tiles'
-          for t in @tiles
+          for i in [@tiles.length-1..0]
+            t = @tiles[i]
             if t.containsPoint(mx, my)
               @user.tile = t
               @user.mouseOffset.x = mx - t.x
@@ -81,9 +82,14 @@ define [
       @tiles = []
       
       # start from here, iterate downwards
-      [x, y]  = [1, 1]
-      minX    = x
-      maxX    = 16
+      maxX        = 10
+      
+      [x, y]      = [((atom.width>>5)-maxX)>>1, 1]
+      minX        = x
+      maxX       += x
+      
+      # chance the tryLayingTile operation will result in a hole!
+      holeChance  = 0.6
       
       @user.layout.x = x
       @user.layout.y = y
@@ -93,18 +99,22 @@ define [
         invalid = true
         i = 0
         while invalid
-          if i is 0
+          if i is 0 and $$.r() > holeChance
             t.transposeOrientation()
           else
             t.x+=32
             if t.x>>5 > maxX
               t.x = minX<<5
               t.y+=32
+          
           i++
           i %= 2
           invalid = !@verifyLayoutValid()
+          
+          # ragequit due to ineptness
+          if t.y > 40<<5 then return false
         
-        return
+        return true
       
       while tilePool.length > 0
         i = $$.R(0,tilePool.length-1)
@@ -115,7 +125,10 @@ define [
         # try placing one at "cursor" location
         tileToPlace.x = x<<5
         tileToPlace.y = y<<5
-        tryLayingTile(tileToPlace)
+        if !tryLayingTile(tileToPlace)
+          console.log(@tiles.length)
+          @tiles = @tiles.concat(tilePool)
+          return false
         x = tileToPlace.x>>5
         y = tileToPlace.y>>5
         
@@ -218,9 +231,16 @@ define [
               atom.playSound('drop')
               @user.lastTile = null
             else
+              # selected a tile to move
               @user.lastClick = 0
               @mode.current = 'move'
               @user.lastTile = @user.tile
+              
+              frontIndex  = @tiles.indexOf(@user.lastTile)
+              front       = @tiles[frontIndex]
+              @tiles.splice(frontIndex, 1)
+              @tiles.push(front)
+              
               atom.playSound('pick')
             
           @user.lastClick += dt  
@@ -275,8 +295,8 @@ define [
           clicked : null
           color :
             opacity : 0.75
-            pressed : '#5a9'
-            up      : '#5a9'
+            pressed : '#F7C839'
+            up      : '#F7C839'
         })
     
       removehighlightbutton : ->
@@ -347,10 +367,12 @@ define [
     buttons :
     
       randomLayout : new Button({
-        x : atom.width - 100
-        y : 120
-        w : 80
-        h : 80
+        x : atom.width - 248
+        y : atom.height - 60
+        w : 138
+        h : 50
+        shape : 'image'
+        image : 'button_random'
         clicked : 'generaterandomlayout'
         color :
           pressed : '#d3f'
@@ -359,9 +381,24 @@ define [
       
       start : new Button({
         x : atom.width - 100
-        y : 20
-        w : 80
-        h : 80
+        y : atom.height - 60
+        w : 90
+        h : 50
+        shape : 'image'
+        image : 'button_play'
+        clicked : null
+        color :
+          pressed : '#0a0'
+          up      : '#3e8'
+      })
+    
+      help : new Button({
+        x : atom.width - 347
+        y : atom.height - 60
+        w : 89
+        h : 50
+        shape : 'image'
+        image : 'button_help'
         clicked : null
         color :
           pressed : '#0a0'
@@ -400,3 +437,4 @@ define [
       atom.context.clear()
       t.draw() for t in @tiles
       v.draw() for k,v of @buttons
+      

@@ -77,7 +77,7 @@ define(function() {
     };
 
     MoveTile.prototype.draw = function() {
-      var ac, c, cx, cy, h, i, j, rotationMagnitude, w, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
+      var ac, c, cx, cy, h, i, img, j, lx, ly, rotationMagnitude, strokeStyleDark, strokeStyleLight, w, x, y, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4;
       ac = atom.context;
       ac.save();
       c = this.getCentroid();
@@ -93,48 +93,35 @@ define(function() {
         ac.rotate(this.rotation);
       }
       ac.lineWidth = 2;
-      if (this.invalidPlacement) {
-        ac.strokeStyle = '#a99';
-      } else {
-        ac.strokeStyle = '#999';
-      }
       for (j = _i = 0, _ref = this.h; 0 <= _ref ? _i < _ref : _i > _ref; j = 0 <= _ref ? ++_i : --_i) {
         for (i = _j = 0, _ref1 = this.w; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
           _ref2 = [this.CELLSIZE * (i - this.w * 0.5), this.CELLSIZE * (j - this.h * 0.5), this.CELLSIZE, this.CELLSIZE, this.CELLSIZE * (i - this.w * 0.5) + this.CELLSIZE * 0.5, this.CELLSIZE * (j - this.h * 0.5) + this.CELLSIZE * 0.5], x = _ref2[0], y = _ref2[1], w = _ref2[2], h = _ref2[3], cx = _ref2[4], cy = _ref2[5];
-          if (this.invalidPlacement) {
-            ac.fillStyle = '#dbc';
-          } else {
-            ac.fillStyle = '#abc';
-          }
-          ac.fillRect(x, y, w, h);
-          ac.strokeRect(x, y, w, h);
-          if (this.invalidPlacement) {
-            ac.fillStyle = '#a89';
-          } else {
-            if ((this.cells != null) && this.cells[this.w * j + i] > 0) {
-              if (this.cells[this.w * j + i] === 1) {
-                ac.fillStyle = '#b32';
-              } else {
-                ac.fillStyle = '#222';
-              }
+          ac.globalAlpha = this.invalidPlacement ? 0.4 : 1;
+          if ((this.cells != null) && this.cells[this.w * j + i] > 0) {
+            if (this.cells[this.w * j + i] === 1) {
+              img = atom.gfx.cell_red;
             } else {
-              ac.fillStyle = '#789';
+              img = atom.gfx.cell_black;
             }
+          } else {
+            img = atom.gfx.cell_;
           }
-          ac.beginPath();
-          ac.arc(cx, cy, 8, 0, 2 * Math.PI, true);
-          ac.fill();
-          ac.stroke();
+          ac.drawImage(img, x, y);
         }
       }
       if (this.invalidPlacement) {
-        ac.strokeStyle = '#500';
+        strokeStyleDark = '#f00';
+        strokeStyleLight = '#f88';
       } else {
-        ac.strokeStyle = '#000';
+        strokeStyleDark = '#333';
+        strokeStyleLight = '#88f';
       }
       _ref3 = [this.CELLSIZE * (-this.w * 0.5), this.CELLSIZE * (-this.h * 0.5)], x = _ref3[0], y = _ref3[1];
+      _ref4 = [x + this.BORDERSIZE_ + 1, y + this.BORDERSIZE_ + 1], lx = _ref4[0], ly = _ref4[1];
+      ac.strokeStyle = strokeStyleDark;
       ac.lineWidth = this.BORDERSIZE;
-      ac.strokeRect(x + this.BORDERSIZE_ + 1, y + this.BORDERSIZE_ + 1, this.w * this.CELLSIZE - this.BORDERSIZE + 2, this.h * this.CELLSIZE - this.BORDERSIZE + 2);
+      ac.lineJoin = 'round';
+      ac.strokeRect(lx, ly, this.w * this.CELLSIZE - this.BORDERSIZE + 2, this.h * this.CELLSIZE - this.BORDERSIZE + 2);
       return ac.restore();
     };
 

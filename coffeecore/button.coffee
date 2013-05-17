@@ -5,6 +5,8 @@ define ->
     w : 0
     h : 0
     
+    shape : 'rect'
+    
     containsPoint : (x,y) ->
       return ( @x <= x <= @x+@w ) and ( @y <= y <= @y+@h )
     
@@ -16,16 +18,22 @@ define ->
     
     draw : ->
       ac = atom.context
-      ac.lineWidth    = 2
-      ac.strokeStyle  = '#111'
-      ac.fillStyle  = @color[@state]
       
       if @color.opacity?
         ac.globalAlpha = @color.opacity
         ac.globalCompositeOperation = 'lighter'
       
-      ac.fillRect(@x, @y, @w, @h)
-      ac.strokeRect(@x, @y, @w, @h)
+      switch @shape
+        when 'rect'
+          ac.lineWidth    = 2
+          ac.strokeStyle  = '#111'
+          ac.fillStyle  = @color[@state]
+          
+          ac.fillRect(@x, @y, @w, @h)
+          ac.strokeRect(@x, @y, @w, @h)
+          
+        when 'image'
+          ac.drawImage(atom.gfx[@image], @x, @y)
       
       if @color.opacity?
         ac.globalAlpha = 1

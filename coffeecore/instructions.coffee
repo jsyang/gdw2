@@ -85,11 +85,25 @@ define ->
         @type           = if params.type? then params.type else 'text'
         @sequenceIndex  = 0
     
+    prevInSequence : ->
+      @sequenceIndex--
+      if @sequenceIndex < 0
+        @sequenceIndex = 0
+        @game.triggers.disablehelprewind.call(@game)
+        
+      @timer = @[@current][@sequenceIndex].time+1
+      atom.stopAllSounds()
+        
+    
     nextInSequence : ->
       @sequenceIndex++
       if @sequenceIndex < @[@current].length
         @timer = @[@current][@sequenceIndex].time
+        @game.triggers.enablehelprewind.call(@game)
       else
+        # We're done!
+        @game.triggers.removehelpnavigationbuttons.call(@game)
+        atom.stopAllSounds()
         @clear()
         
     draw : ->
@@ -114,6 +128,7 @@ define ->
                 
                 
               if audio? and @timer is item.time
+                atom.stopAllSounds()
                 atom.playSound(audio)
               
               i = 0

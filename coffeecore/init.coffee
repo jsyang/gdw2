@@ -27,6 +27,8 @@ define [
     button_random : 'button_random.png'
     button_help : 'button_help.png'
     button_play : 'button_play.png'
+    button_fastforward : 'button_fastforward.png'
+    button_rewind : 'button_rewind.png'
   }, ->
     loaded.gfx = true
     isPreloadComplete()

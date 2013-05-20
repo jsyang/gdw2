@@ -300,7 +300,8 @@ define [
             y : atom.input.mouse.y
       
     
-    triggers :
+    triggers : ######################################################################################
+    
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
         
@@ -309,6 +310,69 @@ define [
       
       showwhosturn : ->
         @instructions.set({ name : 'NEUTRAL_'+@user.COLORS[@user.color].toUpperCase()+'STURN' })
+    
+      removehelpnavigationbuttons : ->
+        delete @buttons.fastForward if @buttons.fastForward?
+        delete @buttons.rewind if @buttons.rewind?
+    
+      disablehelprewind : ->
+        b = @buttons.rewind
+        if b?
+          b.color.opacity = 0.5
+          b.clicked = null
+      
+      enablehelprewind : ->
+        b = @buttons.rewind
+        if b?
+          delete b.color.opacity
+          b.clicked = 'helprewind'
+          
+      disablehelpfastforward : ->
+        b = @buttons.fastforward
+        if b?
+          b.color.opacity = 0.5
+          b.clicked = null
+      
+      enablehelpfastforward : ->
+        b = @buttons.fastforward
+        if b?
+          delete b.color.opacity
+          b.clicked = 'helpfastforward'
+    
+      helpfastforward : ->
+        @instructions.nextInSequence()
+      
+      helprewind : ->
+        @instructions.prevInSequence()
+      
+      addhelpnavigationbuttons : ->
+        @buttons.fastForward = new Button({
+          x : atom.width - 171
+          y : atom.height - 60
+          w : 61
+          h : 50
+          shape : 'image'
+          image : 'button_fastforward'
+          clicked : 'helpfastforward'
+          color :
+            pressed : '#F7C839'
+            up      : '#F7C839'
+        })
+        
+        @buttons.rewind = new Button({
+          x : atom.width - 242
+          y : atom.height - 60
+          w : 61
+          h : 50
+          shape : 'image'
+          image : 'button_rewind'
+          clicked : 'helprewind'
+          color :
+            pressed : '#F7C839'
+            up      : '#F7C839'
+        })
+        
+        @triggers.disablehelprewind.call(@)
       
       addhighlightbutton : ->
         atom.playSound('invalid')
@@ -403,6 +467,8 @@ define [
       
       showgameruleshelp : ->
         @instructions.set({ name : 'HELP' })
+        @triggers.addhelpnavigationbuttons.call(@)
+
       
       showtileplacementhelp : ->
         @instructions.set({ name : 'NEUTRAL_BOARDSETUP' })
@@ -477,8 +543,10 @@ define [
       window.onblur = => @stop
       window.onfocus = => @run
       
-      # initially, you can't play
+      # initially, you can't play since the tiles are jumbled
       @triggers.disablestartbutton.call(@)
+      
+      @instructions.game = @
       
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])

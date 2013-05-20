@@ -222,6 +222,7 @@ define ->
   
   atom._mixer = atom.audioContext?.createGainNode()
   atom._mixer?.connect atom.audioContext.destination
+  atom._mixer?._activeSounds = []
   
   atom.loadSound = (url, callback) ->
     return callback? 'No audio support' unless atom.audioContext
@@ -254,13 +255,31 @@ define ->
           atom.sfx[name] = buffer if buffer
           cb?() unless --toLoad
   
-  atom.playSound = (name, time = 0) ->
+  atom.playSound = (name, track = true, time = 0) ->
     return unless atom.sfx[name] and atom.audioContext
     source = atom.audioContext.createBufferSource()
     source.buffer = atom.sfx[name]
     source.connect atom._mixer
     source.noteOn time
+    
+    # Clear the queue if nothing's playing
+    # FIXME: activeSourceCount is faulty!
+    #atom._mixer._activeSounds = [] if atom.audioContext.activeSourceCount is 0
+    
+    # Keep track of active sounds.
+    atom._mixer._activeSounds.push(source) if track
+    
     source
+    
+  
+  atom.stopAllSounds = ->
+    return unless atom.audioContext
+    for sound in atom._mixer._activeSounds
+      if sound?
+        sound.stop(0)
+    
+    atom._mixer._activeSounds = []
+    return
   
   atom.setVolume = (v) ->
     atom._mixer?.gain.value = v

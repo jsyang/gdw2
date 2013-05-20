@@ -168,10 +168,15 @@ define ->
   
       s = =>
         @step()
-        @frameRequest = requestAnimationFrame s
+        # Need this limiter here otherwise CPU climbs to 100%.
+        # Browser is so fast that it requests a frame nearly every ms.
+        # a la http://code.bytespider.eu/post/20484989272/requestanimationframe-and-html5-game-loops
+        setTimeout(=>
+          @frameRequest = window.requestAnimationFrame s
+        , 20)
   
       @last_step = Date.now()
-      @frameRequest = requestAnimationFrame s
+      @frameRequest = window.requestAnimationFrame s
     stop: ->
       cancelAnimationFrame @frameRequest if @frameRequest
       @frameRequest = null

@@ -196,10 +196,12 @@ define(function() {
       this.running = true;
       s = function() {
         _this.step();
-        return _this.frameRequest = requestAnimationFrame(s);
+        return setTimeout(function() {
+          return _this.frameRequest = window.requestAnimationFrame(s);
+        }, 20);
       };
       this.last_step = Date.now();
-      return this.frameRequest = requestAnimationFrame(s);
+      return this.frameRequest = window.requestAnimationFrame(s);
     };
 
     Game.prototype.stop = function() {

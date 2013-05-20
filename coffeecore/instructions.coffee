@@ -19,22 +19,22 @@ define ->
       time  : 100
     
     NEUTRAL_GAMERULES1 :
-      text  : 'This game is won by scoring.\nThe player who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.'
+      text  : '[1/4] This game is won by scoring.\nThe player who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.'
       audio : 'gamerules1'
       time  : 700
       
     NEUTRAL_GAMERULES2 :
-      text  : 'A player owns a tile when his marbles\ntake up a majority of the cells on the tile.'
+      text  : '[2/4] A player owns a tile when his marbles\ntake up a majority of the cells on the tile.'
       audio : 'gamerules2'
       time  : 400
 
     NEUTRAL_GAMERULES3 :
-      text  : 'Players take turns placing one marble (per turn)\nin an empty cell on a tile that doesn\'t contain\nthe last move.\nA move is legal only if it lies on the same row\nor column as the last marble played.'
+      text  : '[3/4] Players take turns placing one marble (per turn)\nin an empty cell on a tile that doesn\'t contain\nthe last move.\nA move is legal only if it lies on the same row\nor column as the last marble played.'
       audio : 'gamerules3'
       time  : 900
       
     NEUTRAL_GAMERULES4 :
-      text  : 'The game ends when a player has\nno legal moves left on their turn.'
+      text  : '[4/4] The game ends when a player has\nno legal moves left on their turn.'
       audio : 'gamerules4'
       time  : 300
     

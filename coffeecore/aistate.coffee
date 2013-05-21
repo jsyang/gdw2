@@ -40,7 +40,7 @@ define ->
       # init the board with -1s to show illegal moves
       @board = ({
         control : -1    # who controls this cell, -1 = illegal move, 0 = nobody, 1 = red, 2 = black
-        value   : -1    # "desirability of playing here" metric
+        value   : -1    # "desirability of playing here" metric, should be >=0 if the cell is not written off by the AI
         tile    : null  # reference to the tile which this cell belongs to
       } for i in [0...@boardW*@boardH])
       
@@ -157,3 +157,32 @@ define ->
       
       bestMove # relative to layout (board) origin
     
+    
+    calculateTauntBasedOnScore : ->
+      # Call this after the human player's moved.
+      scores =
+        red   : 0
+        black : 0
+        
+      for t in @game.tiles
+        scoreWithinTile = 
+          red   : 0
+          black : 0
+          
+        for i in t.cells
+          switch i
+            when 1
+              scoreWithinTile.red++
+            when 2
+              scoreWithinTile.black++
+              
+        if scoreWithinTile.red > scoreWithinTile.black
+          scores.red += t.w*t.h
+        else if scoreWithinTile.red < scoreWithinTile.black
+          scores.black += t.w*t.h
+      
+      if @color is 2
+        if scores.black > scores.red
+          @game.ai.makeSnarkyRemark('BAD')
+        else
+          @game.ai.makeSnarkyRemark('NEUTRAL')

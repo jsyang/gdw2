@@ -475,6 +475,7 @@ define [
       invalidstart : -> atom.playSound('invalid')
       
       calculatescores : ->
+        # This is semi-duplicated within AIState to use for taunts.
         scores =
           red   : 0
           black : 0

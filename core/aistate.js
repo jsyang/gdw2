@@ -192,6 +192,45 @@ define(function() {
       return bestMove;
     };
 
+    AIState.prototype.calculateTauntBasedOnScore = function() {
+      var i, scoreWithinTile, scores, t, _i, _j, _len, _len1, _ref, _ref1;
+      scores = {
+        red: 0,
+        black: 0
+      };
+      _ref = this.game.tiles;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        t = _ref[_i];
+        scoreWithinTile = {
+          red: 0,
+          black: 0
+        };
+        _ref1 = t.cells;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          i = _ref1[_j];
+          switch (i) {
+            case 1:
+              scoreWithinTile.red++;
+              break;
+            case 2:
+              scoreWithinTile.black++;
+          }
+        }
+        if (scoreWithinTile.red > scoreWithinTile.black) {
+          scores.red += t.w * t.h;
+        } else if (scoreWithinTile.red < scoreWithinTile.black) {
+          scores.black += t.w * t.h;
+        }
+      }
+      if (this.color === 2) {
+        if (scores.black > scores.red) {
+          return this.game.ai.makeSnarkyRemark('BAD');
+        } else {
+          return this.game.ai.makeSnarkyRemark('NEUTRAL');
+        }
+      }
+    };
+
     return AIState;
 
   })();

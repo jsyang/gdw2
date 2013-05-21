@@ -2,7 +2,7 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, Button, Instructions) {
+define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/aiplayer'], function(MoveTile, Button, Instructions, AIState, AIPlayer) {
   var Kulami;
   return Kulami = (function(_super) {
 
@@ -225,23 +225,7 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
               this.triggers.addhighlightbutton.apply(this);
               return this.triggers.showbadmove.call(this);
             } else {
-              this.user.tile.setOuterCell(mouse.x, mouse.y, this.user.color);
-              this.user.lastTile = this.user.tile;
-              this.user.color++;
-              if (this.user.color > 2) {
-                this.user.color = 1;
-              }
-              this.triggers.removehighlightbutton.apply(this);
-              this.user.lastMove = mouse;
-              this.user.moves++;
-              atom.playSound('crack');
-              if (!this.checkIfPlayerHasMovesLeft()) {
-                this.triggers.showgameover.call(this);
-                alert('No moves left for ' + this.user.COLORS[this.user.color] + '!');
-                return this.triggers.calculatescores.call(this);
-              } else {
-                return this.triggers.showwhosturn.call(this);
-              }
+              return this.triggers.movemade.call(this, mouse);
             }
           } else if (this.findUIThing('buttons')) {
             atom.playSound('drop');
@@ -322,6 +306,34 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
     };
 
     Kulami.prototype.triggers = {
+      movemade: function(coord) {
+        var _this = this;
+        this.user.tile.setOuterCell(coord.x, coord.y, this.user.color);
+        this.user.lastTile = this.user.tile;
+        this.user.color++;
+        if (this.user.color > 2) {
+          this.user.color = 1;
+        }
+        this.triggers.removehighlightbutton.apply(this);
+        this.user.lastMove = coord;
+        this.user.moves++;
+        atom.playSound('crack');
+        if (this.ai != null) {
+          this.aistate.updateBoard();
+          if (this.user.color === this.ai.color) {
+            setTimeout((function() {
+              return _this.ai.makeMove();
+            }), 100);
+          }
+        }
+        if (!this.checkIfPlayerHasMovesLeft()) {
+          this.triggers.showgameover.call(this);
+          alert('No moves left for ' + this.user.COLORS[this.user.color] + '!');
+          return this.triggers.calculatescores.call(this);
+        } else {
+          return this.triggers.showwhosturn.call(this);
+        }
+      },
       showgameover: function() {
         return this.instructions.set({
           name: 'NEUTRAL_GAMEOVER'
@@ -485,7 +497,14 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
         this.mode.current = 'play';
         this.user.lastTile = null;
         atom.playSound('valid');
-        return this.triggers.showwhosturn.call(this);
+        this.triggers.showwhosturn.call(this);
+        this.aistate = new AIState({
+          game: this
+        });
+        this.ai = new AIPlayer({
+          game: this
+        });
+        return this.aistate.setBoard();
       },
       generaterandomlayout: function() {
         return this.createRandomLayout();
@@ -583,23 +602,21 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
       })
     };
 
-    Kulami.prototype.instructions = new Instructions();
-
     function Kulami() {
       var i, k, makeTile, tileList, v, _i,
         _this = this;
-      tileList = {
-        '3x2': 4,
-        '2x2': 5,
-        '3x1': 4,
-        '2x1': 4
-      };
       makeTile = function(size) {
         return _this.tiles.push(new MoveTile({
           size: size,
           x: $$.R(1, 200),
           y: $$.R(1, 200)
         }));
+      };
+      tileList = {
+        '3x2': 4,
+        '2x2': 5,
+        '3x1': 4,
+        '2x1': 4
       };
       for (k in tileList) {
         v = tileList[k];
@@ -616,7 +633,9 @@ define(['core/tile', 'core/button', 'core/instructions'], function(MoveTile, But
         return _this.run;
       };
       this.triggers.disablestartbutton.call(this);
-      this.instructions.game = this;
+      this.instructions = new Instructions({
+        game: this
+      });
     }
 
     Kulami.prototype.update = function(dt) {

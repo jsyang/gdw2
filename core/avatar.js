@@ -6,6 +6,14 @@ define(function() {
 
     Avatar.prototype.image = null;
 
+    Avatar.prototype.x = 0;
+
+    Avatar.prototype.y = 0;
+
+    Avatar.prototype.move = function() {};
+
+    Avatar.prototype.taunt = function() {};
+
     function Avatar(params) {
       var k, v;
       for (k in params) {

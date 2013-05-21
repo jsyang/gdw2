@@ -110,6 +110,9 @@ define(function() {
         this.sequenceIndex = 0;
         this.game.triggers.disablehelprewind.call(this.game);
       }
+      if (this.sequenceIndex === 0) {
+        this.game.triggers.disablehelprewind.call(this.game);
+      }
       this.timer = this[this.current][this.sequenceIndex].time + 1;
       return atom.stopAllSounds();
     };

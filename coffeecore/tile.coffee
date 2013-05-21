@@ -4,10 +4,18 @@ define ->
     BORDERSIZE_       : 0.25
     CELLSIZE          : 32 # or 1<<5
     size              : null
+    
+    # If a player controls this tile, how much does their score go up?
+    score             : 0 
+    
+    # in pixels
     x                 : 0
     y                 : 0
+    
+    # in tiles
     w                 : 1
     h                 : 1
+    
     # tile coords relative to user.layout
     lx                : 0   
     ly                : 0
@@ -23,17 +31,17 @@ define ->
       @w = _h
       @h = _w
     
-    containsPoint : (x,y) ->
+    containsPoint : (x,y) -> # in pixels
       return ( @x <= x < @x+@CELLSIZE*@w ) and ( @y <= y < @y+@CELLSIZE*@h )
     
-    lockOrientation : -> @cells = (0 for i in [0...@w*@h])
+    lockOrientation : ->
+      @score = @w*@h
+      @cells = (0 for i in [0...@score])
     
+    # in tiles
     getInnerCell : (x,y) -> return @cells[@w*y+x]
-    
     getOuterCell : (x,y) -> return @getInnerCell(x-@lx,y-@ly)
-    
     setInnerCell : (x,y,v) -> return @cells[@w*y+x] = v
-    
     setOuterCell : (x,y,v) -> return @setInnerCell(x-@lx,y-@ly,v)
     
     getCentroid : ->
@@ -55,7 +63,7 @@ define ->
         if rotationMagnitude < 0.001 then @rotation = 0
       ac.rotate(@rotation) unless @rotation is 0
 
-      ac.lineWidth    = 2
+      ac.lineWidth = 2
       
       for j in [0...@h]
         for i in [0...@w]

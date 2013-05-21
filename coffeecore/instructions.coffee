@@ -90,6 +90,9 @@ define ->
       if @sequenceIndex < 0
         @sequenceIndex = 0
         @game.triggers.disablehelprewind.call(@game)
+      
+      if @sequenceIndex is 0
+        @game.triggers.disablehelprewind.call(@game)
         
       @timer = @[@current][@sequenceIndex].time+1
       atom.stopAllSounds()

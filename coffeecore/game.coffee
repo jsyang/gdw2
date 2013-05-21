@@ -2,7 +2,9 @@ define [
   'core/tile'
   'core/button'
   'core/instructions'
-], (MoveTile, Button, Instructions) ->
+  'core/aistate'
+  'core/aiplayer'
+], (MoveTile, Button, Instructions, AIState, AIPlayer) ->
     
   class Kulami extends atom.Game
     
@@ -162,8 +164,8 @@ define [
         # units for these coords are in tiles, not pixels
         x   : 0   
         y   : 0
-        bx  : 0   # max X
-        by  : 0   # max Y
+        bx  : 0   # max X (bounds X)
+        by  : 0   # max Y (bounds Y)
       mouseOffset :
         x : 0
         y : 0
@@ -205,22 +207,24 @@ define [
               @triggers.showbadmove.call(@)
               
             else
-              @user.tile.setOuterCell(mouse.x, mouse.y, @user.color)
-              @user.lastTile = @user.tile
-              @user.color++
-              if @user.color > 2 then @user.color = 1
-              @triggers.removehighlightbutton.apply(@)
-              @user.lastMove = mouse
-              
-              @user.moves++
-              atom.playSound('crack')
-              
-              if !@checkIfPlayerHasMovesLeft()
-                @triggers.showgameover.call(@)
-                alert('No moves left for '+@user.COLORS[@user.color]+'!')
-                @triggers.calculatescores.call(@)
-              else
-                @triggers.showwhosturn.call(@)
+              @triggers.movemade.call(@, mouse)
+                
+              #@user.tile.setOuterCell(mouse.x, mouse.y, @user.color)
+              #@user.lastTile = @user.tile
+              #@user.color++
+              #if @user.color > 2 then @user.color = 1
+              #@triggers.removehighlightbutton.apply(@)
+              #@user.lastMove = mouse
+              #
+              #@user.moves++
+              #atom.playSound('crack')
+              #
+              #if !@checkIfPlayerHasMovesLeft()
+              #  @triggers.showgameover.call(@)
+              #  alert('No moves left for '+@user.COLORS[@user.color]+'!')
+              #  @triggers.calculatescores.call(@)
+              #else
+              #  @triggers.showwhosturn.call(@)
           
           else if @findUIThing('buttons')
             atom.playSound('drop')
@@ -301,6 +305,31 @@ define [
       
     
     triggers : ######################################################################################
+    
+      movemade : (coord) ->
+          @user.tile.setOuterCell(coord.x, coord.y, @user.color)
+          @user.lastTile = @user.tile
+          @user.color++
+          if @user.color > 2 then @user.color = 1
+          @triggers.removehighlightbutton.apply(@)
+          @user.lastMove = coord
+          
+          @user.moves++
+          atom.playSound('crack')
+          
+          if @ai?
+            @aistate.updateBoard()
+            if @user.color is @ai.color
+              # make a move only after the turn's done
+              setTimeout((=> @ai.makeMove()), 100)
+              
+          
+          if !@checkIfPlayerHasMovesLeft()
+            @triggers.showgameover.call(@)
+            alert('No moves left for '+@user.COLORS[@user.color]+'!')
+            @triggers.calculatescores.call(@)
+          else
+            @triggers.showwhosturn.call(@)
     
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
@@ -435,6 +464,12 @@ define [
         atom.playSound('valid')
         @triggers.showwhosturn.call(@)
         
+        @aistate  = new AIState({ game : @ })
+        @ai       = new AIPlayer({ game : @ })
+        
+        # Set the AI's perception of the cell values
+        @aistate.setBoard()
+        
       generaterandomlayout : -> @createRandomLayout()
       
       invalidstart : -> atom.playSound('invalid')
@@ -516,15 +551,11 @@ define [
           up      : '#3e8'
       })
     
-    instructions : new Instructions()
+    # aistate : null
+    # instructions : null
     
     constructor : ->
-      tileList =  # The full list for kulami.
-        '3x2' : 4
-        '2x2' : 5
-        '3x1' : 4
-        '2x1' : 4
-      
+    
       makeTile = (size) =>
         @tiles.push(
           new MoveTile({
@@ -533,6 +564,12 @@ define [
             y     : $$.R(1,200)
           })
         )
+        
+      tileList =  # The full list for kulami.
+        '3x2' : 4
+        '2x2' : 5
+        '3x1' : 4
+        '2x1' : 4
       
       ( makeTile(k) for i in [0...v] ) for k,v of tileList
     
@@ -546,7 +583,7 @@ define [
       # initially, you can't play since the tiles are jumbled
       @triggers.disablestartbutton.call(@)
       
-      @instructions.game = @
+      @instructions = new Instructions({ game : @ })
       
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])

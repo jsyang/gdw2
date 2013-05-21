@@ -12,6 +12,8 @@ define(function() {
 
     MoveTile.prototype.size = null;
 
+    MoveTile.prototype.score = 0;
+
     MoveTile.prototype.x = 0;
 
     MoveTile.prototype.y = 0;
@@ -43,10 +45,11 @@ define(function() {
 
     MoveTile.prototype.lockOrientation = function() {
       var i;
+      this.score = this.w * this.h;
       return this.cells = (function() {
         var _i, _ref, _results;
         _results = [];
-        for (i = _i = 0, _ref = this.w * this.h; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        for (i = _i = 0, _ref = this.score; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
           _results.push(0);
         }
         return _results;

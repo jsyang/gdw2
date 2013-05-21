@@ -6,6 +6,12 @@ define ->
   class Avatar
     image : null
     
+    x : 0
+    y : 0
+    
+    move : ->
+    
+    taunt : ->
     
     constructor : (params) ->
       @[k] = v for k, v of params

@@ -331,8 +331,11 @@ define [
                 # taunt.
                 @aistate.calculateTauntBasedOnScore()
                 
-                # make a move only after the turn's done
-                setTimeout((=> @ai.makeMove()), 400)
+                # Make a move only after the turn's done.
+                # Randomize the computer's move time, since humans will believe
+                # the game is hard if the computer takes a long time to make his move.
+                
+                setTimeout((=> @ai.makeMove()), $$.R(200,900))
     
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })

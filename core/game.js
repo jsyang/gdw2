@@ -329,7 +329,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
               this.aistate.calculateTauntBasedOnScore();
               return setTimeout((function() {
                 return _this.ai.makeMove();
-              }), 400);
+              }), $$.R(200, 900));
             }
           }
         }

@@ -9,6 +9,9 @@ define ->
       
     makeMove : ->
       move = @game.aistate.findBestMove()
+      # Try again with non-optimal legal moves.
+      if !(move.tile?) then move = @game.aistate.findBestMove(true)
+      
       @game.user.tile = move.tile
       @game.triggers.movemade.call(@game, move)
       console.log('ai plays', [move.x,move.y], 'with tile', move.tile)

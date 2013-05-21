@@ -317,19 +317,19 @@ define [
           @user.moves++
           atom.playSound('crack')
           
-          if @ai?
-            @aistate.updateBoard()
-            if @user.color is @ai.color
-              # make a move only after the turn's done
-              setTimeout((=> @ai.makeMove()), 100)
-              
-          
           if !@checkIfPlayerHasMovesLeft()
             @triggers.showgameover.call(@)
             alert('No moves left for '+@user.COLORS[@user.color]+'!')
             @triggers.calculatescores.call(@)
           else
             @triggers.showwhosturn.call(@)
+            
+            # Make sure the game is not over before we attempt an AI move
+            if @ai?
+              @aistate.updateBoard()
+              if @user.color is @ai.color
+                # make a move only after the turn's done
+                setTimeout((=> @ai.makeMove()), 100)
     
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
@@ -496,7 +496,20 @@ define [
           else if scoreWithinTile.red < scoreWithinTile.black
             scores.black += t.w*t.h
         
-        alert("Final scores:\nRED\t\t#{scores.red}\nBLACK\t#{scores.black}")
+        if scores.black > scores.red
+          endquip = 'Black wins.'
+        else if scores.black is scores.red
+          endquip = 'Draw.'
+        else
+          endquip = 'Red wins.'
+        
+        if @ai
+          if @ai.color is 2
+            if scores.black > scores.red
+              endquip +='\nYou lose, human!'
+        
+        @instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nFinal scores:\nRED -> #{scores.red}\nBLACK -> #{scores.black}\n\n#{endquip}"
+        @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
         
         @mode.current = 'gameover'
       

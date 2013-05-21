@@ -318,20 +318,20 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
         this.user.lastMove = coord;
         this.user.moves++;
         atom.playSound('crack');
-        if (this.ai != null) {
-          this.aistate.updateBoard();
-          if (this.user.color === this.ai.color) {
-            setTimeout((function() {
-              return _this.ai.makeMove();
-            }), 100);
-          }
-        }
         if (!this.checkIfPlayerHasMovesLeft()) {
           this.triggers.showgameover.call(this);
           alert('No moves left for ' + this.user.COLORS[this.user.color] + '!');
           return this.triggers.calculatescores.call(this);
         } else {
-          return this.triggers.showwhosturn.call(this);
+          this.triggers.showwhosturn.call(this);
+          if (this.ai != null) {
+            this.aistate.updateBoard();
+            if (this.user.color === this.ai.color) {
+              return setTimeout((function() {
+                return _this.ai.makeMove();
+              }), 100);
+            }
+          }
         }
       },
       showgameover: function() {
@@ -513,7 +513,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
         return atom.playSound('invalid');
       },
       calculatescores: function() {
-        var i, scoreWithinTile, scores, t, _i, _j, _len, _len1, _ref, _ref1;
+        var endquip, i, scoreWithinTile, scores, t, _i, _j, _len, _len1, _ref, _ref1;
         scores = {
           red: 0,
           black: 0
@@ -542,7 +542,24 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
             scores.black += t.w * t.h;
           }
         }
-        alert("Final scores:\nRED\t\t" + scores.red + "\nBLACK\t" + scores.black);
+        if (scores.black > scores.red) {
+          endquip = 'Black wins.';
+        } else if (scores.black === scores.red) {
+          endquip = 'Draw.';
+        } else {
+          endquip = 'Red wins.';
+        }
+        if (this.ai) {
+          if (this.ai.color === 2) {
+            if (scores.black > scores.red) {
+              endquip += '\nYou lose, human!';
+            }
+          }
+        }
+        this.instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nFinal scores:\nRED -> " + scores.red + "\nBLACK -> " + scores.black + "\n\n" + endquip;
+        this.instructions.set({
+          name: 'NEUTRAL_GAMEOVER'
+        });
         return this.mode.current = 'gameover';
       },
       showgameruleshelp: function() {

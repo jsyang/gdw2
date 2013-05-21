@@ -78,9 +78,9 @@ define ->
             cy = t.ly+i
             cell = @board[cy*@boardW+cx]
             if cell.control is 0 and cx is @game.user.lastMove.x and cy is @game.user.lastMove.y
+              # Occupied!
               cell.control = ((@game.user.color+1) % 2) + 1
-              cell.value = -1
-            else if cell.value > 0
+            else
               if cell.control is 0
                 # todo : tweak this as needed.
                 cell.value = @countAvailableMovesFromCell(cell) + t.score
@@ -91,6 +91,7 @@ define ->
                   marblesOnTile.black++
         
         if Math.max(marblesOnTile.red, marblesOnTile.black) > t.score>>1
+          console.log('tile at', [t.x,t.y], 'has been marked as dead to AI')
           # Not worth fighting for the tile anymore since majority has been achieved.
           # Mark all cells in tile as worthless.
           for i in [0...t.h]
@@ -98,11 +99,12 @@ define ->
               cx = t.lx+j
               cy = t.ly+i
               cell = @board[cy*@boardW+cx]
-              cell.control = -1
+              # Undesirable!
               cell.value = -1
       return
     
-    findBestMove : ->
+    findBestMove : (includeNonOptimalMoves=false) ->
+      if includeNonOptimalMoves then console.log('ai just tried to look for, merely, a legal move!')
       # just use the best cells in terms of values for now
       lastMove =
         x     : @game.user.lastMove.x# - @game.user.layout.x
@@ -112,33 +114,49 @@ define ->
       bestMove =
         x : -1
         y : -1
-        value : -1
+        value : -2
       
       # Moves available in the same row
       for i in [0...@boardW]
         cell = @board[i+@boardW*lastMove.y]
-        if cell.control is 0 and cell.value >= 0 and i != lastMove.x and cell.tile != lastMove.tile
-          if cell.value > bestMove.value
-            bestMove =
-              x     : i
-              y     : lastMove.y
-              value : cell.value
-              tile  : cell.tile
+        if includeNonOptimalMoves 
+          if cell.control is 0 and cell.value >= -1 and i != lastMove.x and cell.tile != lastMove.tile
+            if cell.value >= bestMove.value
+              bestMove =
+                x     : i
+                y     : lastMove.y
+                value : cell.value
+                tile  : cell.tile
+        else
+          if cell.control is 0 and cell.value >= 0 and i != lastMove.x and cell.tile != lastMove.tile
+            if cell.value >= bestMove.value
+              bestMove =
+                x     : i
+                y     : lastMove.y
+                value : cell.value
+                tile  : cell.tile
       
       # Moves available in the same column
       for j in [0...@boardH]
         cell = @board[lastMove.x+@boardW*j]
-        if cell.control is 0 and cell.value >= 0 and j != lastMove.y and cell.tile != lastMove.tile
-          if cell.value > bestMove.value
-            bestMove =
-              x     : lastMove.x
-              y     : j
-              value : cell.value
-              tile  : cell.tile
+        if includeNonOptimalMoves 
+          if cell.control is 0 and cell.value >=-1 and j != lastMove.y and cell.tile != lastMove.tile
+            if (!includeNonOptimalMoves and cell.value >= 0) or
+               (includeNonOptimalMoves and cell.value >=-1)
+              if cell.value >= bestMove.value
+                bestMove =
+                  x     : lastMove.x
+                  y     : j
+                  value : cell.value
+                  tile  : cell.tile
+        else
+          if cell.control is 0 and cell.value >= 0 and j != lastMove.y and cell.tile != lastMove.tile
+            if cell.value >= bestMove.value
+              bestMove =
+                x     : lastMove.x
+                y     : j
+                value : cell.value
+                tile  : cell.tile
       
       bestMove # relative to layout (board) origin
-    
-    # Update only the potential moves from the last move played
-    updateWithLastMove : ->
-      # todo?
     

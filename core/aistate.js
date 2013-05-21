@@ -94,8 +94,7 @@ define(function() {
             cell = this.board[cy * this.boardW + cx];
             if (cell.control === 0 && cx === this.game.user.lastMove.x && cy === this.game.user.lastMove.y) {
               cell.control = ((this.game.user.color + 1) % 2) + 1;
-              cell.value = -1;
-            } else if (cell.value > 0) {
+            } else {
               if (cell.control === 0) {
                 cell.value = this.countAvailableMovesFromCell(cell) + t.score;
               } else {
@@ -109,12 +108,12 @@ define(function() {
           }
         }
         if (Math.max(marblesOnTile.red, marblesOnTile.black) > t.score >> 1) {
+          console.log('tile at', [t.x, t.y], 'has been marked as dead to AI');
           for (i = _l = 0, _ref3 = t.h; 0 <= _ref3 ? _l < _ref3 : _l > _ref3; i = 0 <= _ref3 ? ++_l : --_l) {
             for (j = _m = 0, _ref4 = t.w; 0 <= _ref4 ? _m < _ref4 : _m > _ref4; j = 0 <= _ref4 ? ++_m : --_m) {
               cx = t.lx + j;
               cy = t.ly + i;
               cell = this.board[cy * this.boardW + cx];
-              cell.control = -1;
               cell.value = -1;
             }
           }
@@ -122,8 +121,14 @@ define(function() {
       }
     };
 
-    AIState.prototype.findBestMove = function() {
+    AIState.prototype.findBestMove = function(includeNonOptimalMoves) {
       var bestMove, cell, i, j, lastMove, _i, _j, _ref, _ref1;
+      if (includeNonOptimalMoves == null) {
+        includeNonOptimalMoves = false;
+      }
+      if (includeNonOptimalMoves) {
+        console.log('ai just tried to look for, merely, a legal move!');
+      }
       lastMove = {
         x: this.game.user.lastMove.x,
         y: this.game.user.lastMove.y,
@@ -132,38 +137,64 @@ define(function() {
       bestMove = {
         x: -1,
         y: -1,
-        value: -1
+        value: -2
       };
       for (i = _i = 0, _ref = this.boardW; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
         cell = this.board[i + this.boardW * lastMove.y];
-        if (cell.control === 0 && cell.value >= 0 && i !== lastMove.x && cell.tile !== lastMove.tile) {
-          if (cell.value > bestMove.value) {
-            bestMove = {
-              x: i,
-              y: lastMove.y,
-              value: cell.value,
-              tile: cell.tile
-            };
+        if (includeNonOptimalMoves) {
+          if (cell.control === 0 && cell.value >= -1 && i !== lastMove.x && cell.tile !== lastMove.tile) {
+            if (cell.value >= bestMove.value) {
+              bestMove = {
+                x: i,
+                y: lastMove.y,
+                value: cell.value,
+                tile: cell.tile
+              };
+            }
+          }
+        } else {
+          if (cell.control === 0 && cell.value >= 0 && i !== lastMove.x && cell.tile !== lastMove.tile) {
+            if (cell.value >= bestMove.value) {
+              bestMove = {
+                x: i,
+                y: lastMove.y,
+                value: cell.value,
+                tile: cell.tile
+              };
+            }
           }
         }
       }
       for (j = _j = 0, _ref1 = this.boardH; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; j = 0 <= _ref1 ? ++_j : --_j) {
         cell = this.board[lastMove.x + this.boardW * j];
-        if (cell.control === 0 && cell.value >= 0 && j !== lastMove.y && cell.tile !== lastMove.tile) {
-          if (cell.value > bestMove.value) {
-            bestMove = {
-              x: lastMove.x,
-              y: j,
-              value: cell.value,
-              tile: cell.tile
-            };
+        if (includeNonOptimalMoves) {
+          if (cell.control === 0 && cell.value >= -1 && j !== lastMove.y && cell.tile !== lastMove.tile) {
+            if ((!includeNonOptimalMoves && cell.value >= 0) || (includeNonOptimalMoves && cell.value >= -1)) {
+              if (cell.value >= bestMove.value) {
+                bestMove = {
+                  x: lastMove.x,
+                  y: j,
+                  value: cell.value,
+                  tile: cell.tile
+                };
+              }
+            }
+          }
+        } else {
+          if (cell.control === 0 && cell.value >= 0 && j !== lastMove.y && cell.tile !== lastMove.tile) {
+            if (cell.value >= bestMove.value) {
+              bestMove = {
+                x: lastMove.x,
+                y: j,
+                value: cell.value,
+                tile: cell.tile
+              };
+            }
           }
         }
       }
       return bestMove;
     };
-
-    AIState.prototype.updateWithLastMove = function() {};
 
     return AIState;
 

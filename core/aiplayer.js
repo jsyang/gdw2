@@ -20,6 +20,9 @@ define(function() {
     AIPlayer.prototype.makeMove = function() {
       var move;
       move = this.game.aistate.findBestMove();
+      if (!(move.tile != null)) {
+        move = this.game.aistate.findBestMove(true);
+      }
       this.game.user.tile = move.tile;
       this.game.triggers.movemade.call(this.game, move);
       return console.log('ai plays', [move.x, move.y], 'with tile', move.tile);

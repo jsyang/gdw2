@@ -208,23 +208,6 @@ define [
               
             else
               @triggers.movemade.call(@, mouse)
-                
-              #@user.tile.setOuterCell(mouse.x, mouse.y, @user.color)
-              #@user.lastTile = @user.tile
-              #@user.color++
-              #if @user.color > 2 then @user.color = 1
-              #@triggers.removehighlightbutton.apply(@)
-              #@user.lastMove = mouse
-              #
-              #@user.moves++
-              #atom.playSound('crack')
-              #
-              #if !@checkIfPlayerHasMovesLeft()
-              #  @triggers.showgameover.call(@)
-              #  alert('No moves left for '+@user.COLORS[@user.color]+'!')
-              #  @triggers.calculatescores.call(@)
-              #else
-              #  @triggers.showwhosturn.call(@)
           
           else if @findUIThing('buttons')
             atom.playSound('drop')
@@ -339,6 +322,9 @@ define [
     
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
+        @triggers.removehelpbutton.call(@)
+        @stop()
+        
         
       showbadmove : ->
         @instructions.set({ name : 'BAD_MOVEINVALID' })
@@ -517,7 +503,7 @@ define [
               # One last taunt.
               @aistate.calculateTauntBasedOnScore()
         
-        @instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nFinal scores:\nRED -> #{scores.red}\nBLACK -> #{scores.black}\n\n#{endquip}"
+        @instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nRefresh the page for a new game.\n\nFinal scores:\nRED -> #{scores.red}\nBLACK -> #{scores.black}\n\n#{endquip}"
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
         
         @mode.current = 'gameover'

@@ -335,9 +335,11 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
         }
       },
       showgameover: function() {
-        return this.instructions.set({
+        this.instructions.set({
           name: 'NEUTRAL_GAMEOVER'
         });
+        this.triggers.removehelpbutton.call(this);
+        return this.stop();
       },
       showbadmove: function() {
         return this.instructions.set({
@@ -557,7 +559,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
             }
           }
         }
-        this.instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nFinal scores:\nRED -> " + scores.red + "\nBLACK -> " + scores.black + "\n\n" + endquip;
+        this.instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nRefresh the page for a new game.\n\nFinal scores:\nRED -> " + scores.red + "\nBLACK -> " + scores.black + "\n\n" + endquip;
         this.instructions.set({
           name: 'NEUTRAL_GAMEOVER'
         });

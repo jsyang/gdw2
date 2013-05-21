@@ -14,7 +14,39 @@ define ->
       
       @game.user.tile = move.tile
       @game.triggers.movemade.call(@game, move)
-      console.log('ai plays', [move.x,move.y], 'with tile', move.tile)
       
-    makeSnarkyRemark : ->
-      # todo
+      #console.log('ai plays', [move.x,move.y], 'with tile', move.tile)
+      
+    makeSnarkyRemark : (type) ->
+      switch type
+        when 'GOOD'
+          taunt = $$.WR({
+            'r_excellent' : 2
+            'r_good'      : 3
+            'r_haha'      : 2
+            'r_damn'      : 1
+            'r_damnit'    : 1
+            'silence'     : 4
+          })
+        when 'BAD'
+          taunt = $$.WR({
+            'r_haha'      : 4
+            'r_slow'      : 2
+            'r_fate'      : 1
+            'r_disturb'   : 1
+            'silence'     : 4
+          })
+        when 'NEUTRAL'
+          taunt = $$.WR({
+            'r_slow'      : 1
+            'r_longenough': 1
+            'r_haha'      : 2
+            'r_damn'      : 1
+            'silence'     : 7
+          })
+      
+      console.log('taunt attempt:', taunt)
+      
+      if taunt? and taunt != 'silence'
+        if $$.r() < 0.3 # 30% chance of playing a taunt ontop of existing probability.
+          atom.playSound(taunt)

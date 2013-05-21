@@ -90,7 +90,8 @@ define ->
                   marblesOnTile.black++
         
         if Math.max(marblesOnTile.red, marblesOnTile.black) > t.score>>1
-          console.log('tile at', [t.x,t.y], 'has been marked as dead to AI')
+          #console.log('tile at', [t.x,t.y], 'has been marked as dead to AI')
+          
           # Not worth fighting for the tile anymore since majority has been achieved.
           # Mark all cells in tile as worthless.
           for i in [0...t.h]
@@ -184,5 +185,7 @@ define ->
       if @color is 2
         if scores.black > scores.red
           @game.ai.makeSnarkyRemark('BAD')
+        else if scores.black <= scores.red
+          @game.ai.makeSnarkyRemark('GOOD')
         else
           @game.ai.makeSnarkyRemark('NEUTRAL')

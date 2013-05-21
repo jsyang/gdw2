@@ -328,8 +328,11 @@ define [
             if @ai?
               @aistate.updateBoard()
               if @user.color is @ai.color
+                # taunt.
+                @aistate.calculateTauntBasedOnScore()
+                
                 # make a move only after the turn's done
-                setTimeout((=> @ai.makeMove()), 100)
+                setTimeout((=> @ai.makeMove()), 400)
     
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
@@ -508,6 +511,8 @@ define [
           if @ai.color is 2
             if scores.black > scores.red
               endquip +='\nYou lose, human!'
+              # One last taunt.
+              @aistate.calculateTauntBasedOnScore()
         
         @instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nFinal scores:\nRED -> #{scores.red}\nBLACK -> #{scores.black}\n\n#{endquip}"
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })

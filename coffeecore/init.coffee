@@ -44,6 +44,19 @@ define [
     gamerules2  : 'gamerules2.mp3'
     gamerules3  : 'gamerules3.mp3'
     gamerules4  : 'gamerules4.mp3'
+    
+    r_damn        : 'remarks/damn.wav'
+    r_damnit      : 'remarks/damnit.wav'
+    r_disturbing  : 'remarks/disturb.wav'
+    r_excellent   : 'remarks/excellent.wav'
+    r_fate        : 'remarks/fate.wav'
+    r_good        : 'remarks/good.wav'
+    r_haha        : 'remarks/haha.wav'
+    r_hmm         : 'remarks/hmm.wav'
+    r_longenough  : 'remarks/longenough.wav'
+    r_slow        : 'remarks/slow.wav'
+    
+    
   }, ->
     loaded.sfx = true
     isPreloadComplete()

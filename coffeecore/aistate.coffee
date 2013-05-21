@@ -39,7 +39,7 @@ define ->
     
       # init the board with -1s to show illegal moves
       @board = ({
-        control : 0     # who controls this cell
+        control : -1    # who controls this cell, -1 = illegal move, 0 = nobody, 1 = red, 2 = black
         value   : -1    # "desirability of playing here" metric
         tile    : null  # reference to the tile which this cell belongs to
       } for i in [0...@boardW*@boardH])
@@ -53,8 +53,7 @@ define ->
             cx = t.lx+j
             cy = t.ly+i
             cell = @board[cy*@boardW+cx]
-            if !cell?
-              console.log(cx, cy)
+            cell.control = 0
             cell.value = 0
             cell.x = cx
             cell.y = cy
@@ -141,14 +140,12 @@ define ->
         cell = @board[lastMove.x+@boardW*j]
         if includeNonOptimalMoves 
           if cell.control is 0 and cell.value >=-1 and j != lastMove.y and cell.tile != lastMove.tile
-            if (!includeNonOptimalMoves and cell.value >= 0) or
-               (includeNonOptimalMoves and cell.value >=-1)
-              if cell.value >= bestMove.value
-                bestMove =
-                  x     : lastMove.x
-                  y     : j
-                  value : cell.value
-                  tile  : cell.tile
+            if cell.value >= bestMove.value
+              bestMove =
+                x     : lastMove.x
+                y     : j
+                value : cell.value
+                tile  : cell.tile
         else
           if cell.control is 0 and cell.value >= 0 and j != lastMove.y and cell.tile != lastMove.tile
             if cell.value >= bestMove.value

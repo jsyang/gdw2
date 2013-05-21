@@ -50,7 +50,7 @@ define(function() {
         _results = [];
         for (i = _i = 0, _ref = this.boardW * this.boardH; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
           _results.push({
-            control: 0,
+            control: -1,
             value: -1,
             tile: null
           });
@@ -65,9 +65,7 @@ define(function() {
             cx = t.lx + j;
             cy = t.ly + i;
             cell = this.board[cy * this.boardW + cx];
-            if (!(cell != null)) {
-              console.log(cx, cy);
-            }
+            cell.control = 0;
             cell.value = 0;
             cell.x = cx;
             cell.y = cy;
@@ -169,15 +167,13 @@ define(function() {
         cell = this.board[lastMove.x + this.boardW * j];
         if (includeNonOptimalMoves) {
           if (cell.control === 0 && cell.value >= -1 && j !== lastMove.y && cell.tile !== lastMove.tile) {
-            if ((!includeNonOptimalMoves && cell.value >= 0) || (includeNonOptimalMoves && cell.value >= -1)) {
-              if (cell.value >= bestMove.value) {
-                bestMove = {
-                  x: lastMove.x,
-                  y: j,
-                  value: cell.value,
-                  tile: cell.tile
-                };
-              }
+            if (cell.value >= bestMove.value) {
+              bestMove = {
+                x: lastMove.x,
+                y: j,
+                value: cell.value,
+                tile: cell.tile
+              };
             }
           }
         } else {

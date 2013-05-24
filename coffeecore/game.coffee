@@ -193,6 +193,9 @@ define [
       current : 'select'
       
       gameover : (dt) ->
+        if @findUIThing('buttons')
+          atom.playSound('drop')
+          @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
 
       play : (dt) ->
         if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
@@ -203,7 +206,6 @@ define [
                 (@user.moves > 0 and (mouse.x != @user.lastMove.x and mouse.y != @user.lastMove.y))
               
               # already played here. illegal move
-              @triggers.addhighlightbutton.apply(@)
               @triggers.showbadmove.call(@)
               
             else
@@ -285,7 +287,7 @@ define [
           @user.lastMouse =
             x : atom.input.mouse.x
             y : atom.input.mouse.y
-      
+       
     
     triggers : ######################################################################################
     
@@ -299,6 +301,7 @@ define [
           
           @user.moves++
           atom.playSound('crack')
+          @triggers.addhighlightbutton.apply(@)
           
           if !@checkIfPlayerHasMovesLeft()
             @triggers.showgameover.call(@)
@@ -323,14 +326,17 @@ define [
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
         @triggers.removehelpbutton.call(@)
-        @stop()
-        
+        @triggers.addrestartgamebutton.call(@)
         
       showbadmove : ->
+        atom.playSound('invalid')
         @instructions.set({ name : 'BAD_MOVEINVALID' })
+        @triggers.removehelpnavigationbuttons.call(@)
+
       
       showwhosturn : ->
         @instructions.set({ name : 'NEUTRAL_'+@user.COLORS[@user.color].toUpperCase()+'STURN' })
+        @triggers.removehelpnavigationbuttons.call(@)
     
       removehelpnavigationbuttons : ->
         delete @buttons.fastForward if @buttons.fastForward?
@@ -351,7 +357,7 @@ define [
       disablehelpfastforward : ->
         b = @buttons.fastforward
         if b?
-          b.color.opacity = 0.5
+          b.color.opacity = 0.4
           b.clicked = null
       
       enablehelpfastforward : ->
@@ -396,18 +402,17 @@ define [
         @triggers.disablehelprewind.call(@)
       
       addhighlightbutton : ->
-        atom.playSound('invalid')
         
         @buttons.highlightLastMove = new Button({
           x : (@user.layout.x + @user.lastMove.x)<<5
           y : (@user.layout.y + @user.lastMove.y)<<5
-          w : 32
-          h : 32
+          w : 16
+          shape : 'circle'
           clicked : null
           color :
-            opacity : 0.5
-            pressed : '#F7C839'
-            up      : '#F7C839'
+            opacity : 0.4
+            pressed : '#F7C8F9'
+            up      : '#F7C8F9'
         })
     
       removehighlightbutton : ->
@@ -418,6 +423,7 @@ define [
         
       removehelpbutton : ->
         delete @buttons.help if @buttons.help?
+        @triggers.removehelpnavigationbuttons.call(@)
     
       removestartbutton : ->
         delete @buttons.start if @buttons.start?
@@ -447,7 +453,7 @@ define [
         ) for t in @tiles
         @triggers.removestartbutton.call(@)
         @triggers.removerandomlayoutbutton.call(@)
-        #@triggers.removehelpbutton.call(@)
+
         # Use it for instructions instead
         @buttons.help.clicked = 'showgameruleshelp'
         
@@ -503,7 +509,7 @@ define [
               # One last taunt.
               @aistate.calculateTauntBasedOnScore()
         
-        @instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\nRefresh the page for a new game.\n\nFinal scores:\nRED -> #{scores.red}\nBLACK -> #{scores.black}\n\n#{endquip}"
+        @instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\n\nFinal scores:\nRED -> #{scores.red}\nBLACK -> #{scores.black}\n\n#{endquip}"
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
         
         @mode.current = 'gameover'
@@ -515,6 +521,20 @@ define [
       
       showtileplacementhelp : ->
         @instructions.set({ name : 'NEUTRAL_BOARDSETUP' })
+        
+      addrestartgamebutton : ->
+        @buttons.restart = new Button({
+          x : atom.width - 10 - 136
+          y : atom.height - 60
+          w : 136
+          h : 50
+          shape : 'image'
+          image : 'button_restart'
+          clicked : 'reloadpage'
+        })
+    
+      reloadpage : ->
+        window.location.reload()
     
     tiles : []
     

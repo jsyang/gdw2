@@ -14,6 +14,8 @@ define(function() {
 
     Button.prototype.shape = 'rect';
 
+    Button.prototype.circleArc = 2 * Math.PI;
+
     Button.prototype.containsPoint = function(x, y) {
       return ((this.x <= x && x <= this.x + this.w)) && ((this.y <= y && y <= this.y + this.h));
     };
@@ -33,6 +35,14 @@ define(function() {
         ac.globalCompositeOperation = 'lighter';
       }
       switch (this.shape) {
+        case 'circle':
+          ac.lineWidth = 2;
+          ac.strokeStyle = '#111';
+          ac.fillStyle = this.color[this.state];
+          ac.beginPath();
+          ac.arc(this.x + 16, this.y + 16, this.w, 0, Math.PI * 2);
+          ac.fill();
+          break;
         case 'rect':
           ac.lineWidth = 2;
           ac.strokeStyle = '#111';

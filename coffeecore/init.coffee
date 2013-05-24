@@ -29,6 +29,7 @@ define [
     button_play : 'button_play.png'
     button_fastforward : 'button_fastforward.png'
     button_rewind : 'button_rewind.png'
+    button_restart : 'button_restart.png'
   }, ->
     loaded.gfx = true
     isPreloadComplete()

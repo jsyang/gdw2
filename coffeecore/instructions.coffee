@@ -4,9 +4,9 @@ define ->
     # each string is prefaced with a mood so the key for it is searchable
     
     NEUTRAL_BOARDSETUP :
-      text  : 'Drag the tiles to form a board of \nnon-overlapping tiles. Overlapped\ntiles are outlined in red.\nDouble click a tile to change its rotation.'
+      text  : 'Construct board layout.\n\nDrag the tiles to form a board of \nnon-overlapping tiles. Overlapped\ntiles are shown in red. Double click \na tile to change its rotation.'
       audio : null
-      time  : 1000 # game cycles
+      time  : Infinity # game cycles
     
     BAD_BOARDINVALID :
       text  : 'Illegal board layout!'
@@ -19,22 +19,22 @@ define ->
       time  : 100
     
     NEUTRAL_GAMERULES1 :
-      text  : '[1/5] This game is won by scoring.\nThe player who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.'
+      text  : '[1/5] This game is won by scoring. The\nplayer who owns the most cells wins.\nOn each turn, a player places a marble\non an empty spot on a tile.'
       audio : 'gamerules1'
       time  : 700
       
     NEUTRAL_GAMERULES2 :
-      text  : '[2/5] A player owns a tile when his marbles\ntake up a majority of the cells on the tile.'
+      text  : '[2/5] A player owns a tile when his\nmarbles take up a majority of the\ncells on the tile.'
       audio : 'gamerules2'
       time  : 400
       
     NEUTRAL_GAMERULES3 :
-      text  : '[3/5] A player\'s score is the total count of cells in owned tiles.'
+      text  : '[3/5] A player\'s score is the sum of\nthe cells in owned tiles.'
       audio : null # todo
       time  : 400
 
     NEUTRAL_GAMERULES4 :
-      text  : '[4/5] Players take turns placing one marble (per turn)\nin an empty cell on a tile that doesn\'t contain\nthe last move.\nA move is legal only if it lies on the same row\nor column as the last marble played.'
+      text  : '[4/5] Players take turns placing one\nmarble (per turn) in an empty cell on\na tile that doesn\'t contain the last\nmove.\nA move is legal only if it lies on the\nsame row or column as the last\nmarble played.'
       audio : 'gamerules3'
       time  : 900
       
@@ -60,7 +60,7 @@ define ->
     
     current       : 'NEUTRAL_BOARDSETUP'
     type          : 'text'
-    timer         : 600
+    timer         : Infinity
     sequenceIndex : null
     
     game : null # ref to parent game
@@ -74,6 +74,7 @@ define ->
         @NEUTRAL_GAMERULES2
         @NEUTRAL_GAMERULES3
         @NEUTRAL_GAMERULES4
+        @NEUTRAL_GAMERULES5
       ]
     
     clear : ->
@@ -110,9 +111,9 @@ define ->
         @game.triggers.enablehelprewind.call(@game)
       else
         # We're done!
-        @game.triggers.removehelpnavigationbuttons.call(@game)
         atom.stopAllSounds()
         @clear()
+        @game.triggers.showwhosturn.call(@game)
         
     draw : ->
       if @current?

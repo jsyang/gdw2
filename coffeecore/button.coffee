@@ -6,6 +6,7 @@ define ->
     h : 0
     
     shape : 'rect'
+    circleArc : 2*Math.PI
     
     containsPoint : (x,y) ->
       return ( @x <= x <= @x+@w ) and ( @y <= y <= @y+@h )
@@ -24,6 +25,15 @@ define ->
         ac.globalCompositeOperation = 'lighter'
       
       switch @shape
+        when 'circle'
+          ac.lineWidth    = 2
+          ac.strokeStyle  = '#111'
+          ac.fillStyle  = @color[@state]
+          
+          ac.beginPath()
+          ac.arc(@x+16, @y+16, @w, 0, Math.PI*2);
+          ac.fill()
+          
         when 'rect'
           ac.lineWidth    = 2
           ac.strokeStyle  = '#111'

@@ -1,27 +1,23 @@
 <html>
-<title>Boardgame.</title>
-<script>
-    if(window.location.origin.indexOf('file://')!=-1) {
-        // Loaded this file from Finder / shell script. Reload from local webserver.
-        window.location.href = 'http://localhost:8080';
-    }
-</script>
-
-<style>
-    body {
-        background: url('gfx/wood.jpg');
-    }
-</style>
-
-<body><canvas></canvas></body>
-
-<script src="lib/require.js"></script>
-<script>
-  require.config({
-    paths : {
-      'text' : 'lib/text'
-    }
-  });
-  require(['core/init']);
-</script>
+    <head>
+        <title>Boardgame.</title>
+        <script>
+            if(window.location.origin.indexOf('file://')!=-1) {
+                // Loaded this file from Finder / shell script. Reload from local webserver.
+                window.location.href = 'http://localhost:8080';
+            }
+        </script>
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0 maximum-scale=1, user-scalable=no" />
+        <style>
+            body {
+                background: url('gfx/wood.jpg');
+            }
+        </style>
+    </head>
+    <body><canvas></canvas></body>
+    <script src="lib/require.js"></script>
+    <script>
+      require.config({ paths : { 'text' : 'lib/text' } });
+      require(['core/init']);
+    </script>
 </html>

@@ -216,10 +216,12 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
     Kulami.prototype.mode = {
       current: 'select',
       gameover: function(dt) {
-        if (this.findUIThing('buttons')) {
-          atom.playSound('drop');
-          if (this.user.lastButton.clicked != null) {
-            return this.triggers[this.user.lastButton.clicked].apply(this);
+        if (atom.input.pressed('touchfinger') || atom.input.pressed('mouseleft')) {
+          if (this.findUIThing('buttons')) {
+            atom.playSound('drop');
+            if (this.user.lastButton.clicked != null) {
+              return this.triggers[this.user.lastButton.clicked].apply(this);
+            }
           }
         }
       },

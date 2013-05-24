@@ -443,7 +443,7 @@ define [
           b.color =
             pressed : '#0a0'
             up      : '#aeb'
-            opacity : 0.75
+            opacity : 0.2
           b.clicked = 'invalidstart'
         
       startgame : ->

@@ -193,9 +193,10 @@ define [
       current : 'select'
       
       gameover : (dt) ->
-        if @findUIThing('buttons')
-          atom.playSound('drop')
-          @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
+        if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
+          if @findUIThing('buttons')
+            atom.playSound('drop')
+            @triggers[@user.lastButton.clicked].apply(@) if @user.lastButton.clicked?
 
       play : (dt) ->
         if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))

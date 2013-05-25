@@ -314,6 +314,19 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
     };
 
     BoardGame.prototype.triggers = {
+      tallyscore: function() {
+        var t, _i, _len, _ref;
+        _ref = this.tiles;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          t = _ref[_i];
+          if (!t.finalTallied) {
+            this.finaltiles.push(t);
+            this.tiles.splice(this.tiles.indexOf(t), 1);
+            t.finalTallied = true;
+            break;
+          }
+        }
+      },
       movemade: function(coord) {
         var _this = this;
         this.user.tile.setOuterCell(coord.x, coord.y, this.user.color);
@@ -578,6 +591,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
         this.instructions.set({
           name: 'NEUTRAL_GAMEOVER'
         });
+        this.triggers.tallyscore.call(this);
         return this.mode.current = 'gameover';
       },
       showgameruleshelp: function() {
@@ -628,6 +642,8 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
     };
 
     BoardGame.prototype.tiles = [];
+
+    BoardGame.prototype.finaltiles = [];
 
     BoardGame.prototype.buttons = {
       randomLayout: new Button({
@@ -716,7 +732,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
     };
 
     BoardGame.prototype.draw = function() {
-      var k, t, v, _i, _len, _ref, _ref1;
+      var k, t, v, _i, _j, _len, _len1, _ref, _ref1, _ref2;
       atom.context.clear();
       _ref = this.tiles;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -727,6 +743,11 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       for (k in _ref1) {
         v = _ref1[k];
         v.draw();
+      }
+      _ref2 = this.finaltiles;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        t = _ref2[_j];
+        t.draw();
       }
       return this.instructions.draw();
     };

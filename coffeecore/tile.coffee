@@ -23,6 +23,12 @@ define ->
     rotation          : 0
     
     invalidPlacement  : true
+    finalTallied      : false
+    finalScore        : null
+    finalColor        : null
+    finalTextOffset   : null
+    opacity           : 1
+    firedNextTally    : false
     
     cells             : null
     
@@ -53,16 +59,22 @@ define ->
     draw : ->
       
       ac = atom.context
-  
-      ac.save()
       c = @getCentroid()
+      ac.save()
       ac.translate(c.x, c.y)
-      rotationMagnitude = Math.abs(@rotation)
-      if rotationMagnitude > 0
-        @rotation *= 0.6
-        if rotationMagnitude < 0.001 then @rotation = 0
-      ac.rotate(@rotation) unless @rotation is 0
-
+        
+      if @finalTallied
+        if @opacity > 0.3
+          @opacity -= 0.02
+        ac.globalAlpha = @opacity
+      else
+        rotationMagnitude = Math.abs(@rotation)
+        if rotationMagnitude > 0
+          @rotation *= 0.6
+          if rotationMagnitude < 0.001 then @rotation = 0
+        ac.rotate(@rotation) unless @rotation is 0
+      
+      
       ac.lineWidth = 2
       
       for j in [0...@h]
@@ -75,8 +87,6 @@ define ->
             @CELLSIZE*(i-@w*0.5) + @CELLSIZE*0.5
             @CELLSIZE*(j-@h*0.5) + @CELLSIZE*0.5
           ]
-          
-          #ac.globalAlpha = if @invalidPlacement then 0.4 else 1
 
           if @cells? and @cells[@w*j+i] > 0
             if @cells[@w*j+i] is 1
@@ -110,7 +120,53 @@ define ->
       ac.lineWidth    = @BORDERSIZE
       ac.lineJoin     = 'round'
       ac.strokeRect(lx, ly, @w*@CELLSIZE-@BORDERSIZE+2, @h*@CELLSIZE-@BORDERSIZE+2)
-      
+  
+      # Show final score on tile.  
+      if @finalTallied is true
+        if @opacity <= 0.3
+          # Write scores for color here.
+          ac.globalCompositeOperation = 'source-over'
+          ac.font = 'bold 30px Helvetica';
+          
+          if @finalScore? and @finalColor? and @finalTextOffset?
+          else
+            # Set everything once only!
+            red   = 0
+            black = 0
+            (
+              switch color
+                when 1
+                  red++
+                when 2
+                  black++
+            ) for color in @cells
+            
+            @finalScore = @score
+            if red is black
+              @finalScore = '-'
+              @finalColor = '#666'
+            else if red > black
+              @finalColor = '#f00'
+            else
+              @finalColor = '#222'
+              
+            text = ac.measureText(@finalScore)
+            @finalTextOffset =
+              x : -(text.width>>1)
+              y : 10
+           
+          ac.fillStyle = @finalColor
+          ac.globalAlpha = 1
+          ac.fillText(@finalScore, @finalTextOffset.x, @finalTextOffset.y)
+          ac.globalAlpha = @opacity
+          
+          if !@firedNextTally
+            atom.playSound('drop')
+            @firedNextTally = true
+            setTimeout(
+              -> window.game.triggers.tallyscore.call(window.game)
+            , 300)
+    
       ac.restore()
     
     constructor : (params) ->

@@ -244,8 +244,6 @@ define [
                 @tiles.push(front)
               
               atom.playSound('pick')
-            
-        
         
         if (atom.input.pressed('touchfinger') or atom.input.pressed('mouseleft'))
           if @findUIThing('buttons')
@@ -291,6 +289,16 @@ define [
        
     
     triggers : ######################################################################################
+    
+      tallyscore : ->
+        (
+          if !t.finalTallied
+            @finaltiles.push(t)
+            @tiles.splice(@tiles.indexOf(t),1)
+            t.finalTallied = true
+            break
+        ) for t in @tiles
+        return
     
       movemade : (coord) ->
         @user.tile.setOuterCell(coord.x, coord.y, @user.color)
@@ -514,6 +522,7 @@ define [
         
         @instructions.NEUTRAL_GAMEOVER.text = "GAME OVER!\n\nFinal scores:\nRED -> #{scores.red}\nBLACK -> #{scores.black}\n\n#{endquip}"
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
+        @triggers.tallyscore.call(@)
         
         @mode.current = 'gameover'
       
@@ -559,7 +568,8 @@ define [
         return
         
         
-    tiles : []
+    tiles       : []
+    finaltiles  : [] # fill up with the scored tiles
     
     buttons :
     
@@ -647,6 +657,7 @@ define [
       atom.context.clear()
       t.draw() for t in @tiles
       v.draw() for k,v of @buttons
+      t.draw() for t in @finaltiles
       
       @instructions.draw()
       

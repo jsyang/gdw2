@@ -30,6 +30,18 @@ define(function() {
 
     MoveTile.prototype.invalidPlacement = true;
 
+    MoveTile.prototype.finalTallied = false;
+
+    MoveTile.prototype.finalScore = null;
+
+    MoveTile.prototype.finalColor = null;
+
+    MoveTile.prototype.finalTextOffset = null;
+
+    MoveTile.prototype.opacity = 1;
+
+    MoveTile.prototype.firedNextTally = false;
+
     MoveTile.prototype.cells = null;
 
     MoveTile.prototype.transposeOrientation = function() {
@@ -80,20 +92,27 @@ define(function() {
     };
 
     MoveTile.prototype.draw = function() {
-      var ac, c, cx, cy, h, i, img, j, lx, ly, rotationMagnitude, strokeStyleDark, strokeStyleLight, w, x, y, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4;
+      var ac, black, c, color, cx, cy, h, i, img, j, lx, ly, red, rotationMagnitude, strokeStyleDark, strokeStyleLight, text, w, x, y, _i, _j, _k, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       ac = atom.context;
-      ac.save();
       c = this.getCentroid();
+      ac.save();
       ac.translate(c.x, c.y);
-      rotationMagnitude = Math.abs(this.rotation);
-      if (rotationMagnitude > 0) {
-        this.rotation *= 0.6;
-        if (rotationMagnitude < 0.001) {
-          this.rotation = 0;
+      if (this.finalTallied) {
+        if (this.opacity > 0.3) {
+          this.opacity -= 0.02;
         }
-      }
-      if (this.rotation !== 0) {
-        ac.rotate(this.rotation);
+        ac.globalAlpha = this.opacity;
+      } else {
+        rotationMagnitude = Math.abs(this.rotation);
+        if (rotationMagnitude > 0) {
+          this.rotation *= 0.6;
+          if (rotationMagnitude < 0.001) {
+            this.rotation = 0;
+          }
+        }
+        if (this.rotation !== 0) {
+          ac.rotate(this.rotation);
+        }
       }
       ac.lineWidth = 2;
       for (j = _i = 0, _ref = this.h; 0 <= _ref ? _i < _ref : _i > _ref; j = 0 <= _ref ? ++_i : --_i) {
@@ -124,6 +143,54 @@ define(function() {
       ac.lineWidth = this.BORDERSIZE;
       ac.lineJoin = 'round';
       ac.strokeRect(lx, ly, this.w * this.CELLSIZE - this.BORDERSIZE + 2, this.h * this.CELLSIZE - this.BORDERSIZE + 2);
+      if (this.finalTallied === true) {
+        if (this.opacity <= 0.3) {
+          ac.globalCompositeOperation = 'source-over';
+          ac.font = 'bold 30px Helvetica';
+          if ((this.finalScore != null) && (this.finalColor != null) && (this.finalTextOffset != null)) {
+
+          } else {
+            red = 0;
+            black = 0;
+            _ref5 = this.cells;
+            for (_k = 0, _len = _ref5.length; _k < _len; _k++) {
+              color = _ref5[_k];
+              switch (color) {
+                case 1:
+                  red++;
+                  break;
+                case 2:
+                  black++;
+              }
+            }
+            this.finalScore = this.score;
+            if (red === black) {
+              this.finalScore = '-';
+              this.finalColor = '#666';
+            } else if (red > black) {
+              this.finalColor = '#f00';
+            } else {
+              this.finalColor = '#222';
+            }
+            text = ac.measureText(this.finalScore);
+            this.finalTextOffset = {
+              x: -(text.width >> 1),
+              y: 10
+            };
+          }
+          ac.fillStyle = this.finalColor;
+          ac.globalAlpha = 1;
+          ac.fillText(this.finalScore, this.finalTextOffset.x, this.finalTextOffset.y);
+          ac.globalAlpha = this.opacity;
+          if (!this.firedNextTally) {
+            atom.playSound('drop');
+            this.firedNextTally = true;
+            setTimeout(function() {
+              return window.game.triggers.tallyscore.call(window.game);
+            }, 300);
+          }
+        }
+      }
       return ac.restore();
     };
 

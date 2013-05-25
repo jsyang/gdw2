@@ -34,7 +34,7 @@ define ->
             'r_slow'      : 2
             'r_fate'      : 1
             'r_disturb'   : 1
-            'silence'     : 4
+            'silence'     : 3
           })
         when 'NEUTRAL'
           taunt = $$.WR({
@@ -42,11 +42,11 @@ define ->
             'r_longenough': 1
             'r_haha'      : 2
             'r_damn'      : 1
-            'silence'     : 7
+            'silence'     : 4
           })
       
       console.log('taunt attempt:', taunt)
       
       if taunt? and taunt != 'silence'
-        if $$.r() < 0.3 # 30% chance of playing a taunt ontop of existing probability.
+        if $$.r() < 0.2 # 20% chance of playing a taunt ontop of existing probability.
           atom.playSound(taunt)

@@ -3,12 +3,12 @@ var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/aiplayer'], function(MoveTile, Button, Instructions, AIState, AIPlayer) {
-  var Kulami;
-  return Kulami = (function(_super) {
+  var BoardGame;
+  return BoardGame = (function(_super) {
 
-    __extends(Kulami, _super);
+    __extends(BoardGame, _super);
 
-    Kulami.prototype.getLayoutOrigin = function() {
+    BoardGame.prototype.getLayoutOrigin = function() {
       var maxX, maxY, minX, minY, t, _i, _len, _ref;
       minX = Infinity;
       maxX = 0;
@@ -36,7 +36,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       return this.user.layout.by = maxY;
     };
 
-    Kulami.prototype.verifyLayoutValid = function() {
+    BoardGame.prototype.verifyLayoutValid = function() {
       var i, layout, minX, minY, t, x, y, _i, _j, _k, _ref, _ref1, _ref2;
       this.getLayoutOrigin();
       layout = (function() {
@@ -65,7 +65,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       return true;
     };
 
-    Kulami.prototype.findTileAt = function(x, y) {
+    BoardGame.prototype.findTileAt = function(x, y) {
       var t, _i, _len, _ref;
       _ref = this.tiles;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -77,7 +77,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       return null;
     };
 
-    Kulami.prototype.findUIThing = function(thingType) {
+    BoardGame.prototype.findUIThing = function(thingType) {
       var i, k, mx, my, t, v, _i, _ref, _ref1;
       mx = atom.input.mouse.x;
       my = atom.input.mouse.y;
@@ -107,14 +107,14 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       return false;
     };
 
-    Kulami.prototype.translateMouseToLayout = function() {
+    BoardGame.prototype.translateMouseToLayout = function() {
       return {
         x: ((atom.input.mouse.x >> 5) - this.user.layout.x << 5) >> 5,
         y: ((atom.input.mouse.y >> 5) - this.user.layout.y << 5) >> 5
       };
     };
 
-    Kulami.prototype.createRandomLayout = function() {
+    BoardGame.prototype.createRandomLayout = function() {
       var holeChance, i, maxX, minX, tilePool, tileToPlace, tryLayingTile, x, y, _ref,
         _this = this;
       tilePool = this.tiles.slice();
@@ -166,7 +166,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       this.triggers.startgame.call(this);
     };
 
-    Kulami.prototype.user = {
+    BoardGame.prototype.user = {
       moves: 0,
       COLORS: [null, 'red', 'black'],
       color: 1,
@@ -194,7 +194,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       }
     };
 
-    Kulami.prototype.checkIfPlayerHasMovesLeft = function() {
+    BoardGame.prototype.checkIfPlayerHasMovesLeft = function() {
       var t, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
       y = this.user.lastMove.y + this.user.layout.y;
       for (x = _i = _ref = this.user.layout.x, _ref1 = this.user.layout.bx; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
@@ -213,7 +213,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       return false;
     };
 
-    Kulami.prototype.mode = {
+    BoardGame.prototype.mode = {
       current: 'select',
       gameover: function(dt) {
         if (atom.input.pressed('touchfinger') || atom.input.pressed('mouseleft')) {
@@ -313,7 +313,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       }
     };
 
-    Kulami.prototype.triggers = {
+    BoardGame.prototype.triggers = {
       movemade: function(coord) {
         var _this = this;
         this.user.tile.setOuterCell(coord.x, coord.y, this.user.color);
@@ -414,6 +414,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
         this.buttons.fastForward = new Button({
           x: atom.width - 171,
           y: atom.height - 60,
+          hOffset: 171,
           w: 61,
           h: 50,
           shape: 'image',
@@ -427,6 +428,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
         this.buttons.rewind = new Button({
           x: atom.width - 242,
           y: atom.height - 60,
+          hOffset: 242,
           w: 61,
           h: 50,
           shape: 'image',
@@ -492,7 +494,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
           b.color = {
             pressed: '#0a0',
             up: '#aeb',
-            opacity: 0.75
+            opacity: 0.2
           };
           return b.clicked = 'invalidstart';
         }
@@ -593,6 +595,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
         return this.buttons.restart = new Button({
           x: atom.width - 10 - 136,
           y: atom.height - 60,
+          hOffset: 136,
           w: 136,
           h: 50,
           shape: 'image',
@@ -602,15 +605,35 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       },
       reloadpage: function() {
         return window.location.reload();
+      },
+      horizontalorientation: function() {
+        this.instructions.vOffset = 0;
+        this.triggers.reflowbuttons.call(this);
+      },
+      verticalorientation: function() {
+        this.instructions.vOffset = 50;
+        this.triggers.reflowbuttons.call(this);
+      },
+      reflowbuttons: function() {
+        var k, v, _ref;
+        _ref = this.buttons;
+        for (k in _ref) {
+          v = _ref[k];
+          if (v.image != null) {
+            v.x = atom.width - v.hOffset;
+            v.y = atom.height - 60;
+          }
+        }
       }
     };
 
-    Kulami.prototype.tiles = [];
+    BoardGame.prototype.tiles = [];
 
-    Kulami.prototype.buttons = {
+    BoardGame.prototype.buttons = {
       randomLayout: new Button({
         x: atom.width - 248,
         y: atom.height - 60,
+        hOffset: 248,
         w: 138,
         h: 50,
         shape: 'image',
@@ -624,6 +647,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       start: new Button({
         x: atom.width - 347,
         y: atom.height - 60,
+        hOffset: 347,
         w: 90,
         h: 50,
         shape: 'image',
@@ -637,6 +661,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       help: new Button({
         x: atom.width - 100,
         y: atom.height - 60,
+        hOffset: 100,
         w: 89,
         h: 50,
         shape: 'image',
@@ -649,7 +674,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       })
     };
 
-    function Kulami() {
+    function BoardGame() {
       var i, k, makeTile, tileList, v, _i,
         _this = this;
       makeTile = function(size) {
@@ -681,15 +706,16 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       };
       this.triggers.disablestartbutton.call(this);
       this.instructions = new Instructions({
-        game: this
+        game: this,
+        verticaloffset: 0
       });
     }
 
-    Kulami.prototype.update = function(dt) {
+    BoardGame.prototype.update = function(dt) {
       return this.mode[this.mode.current].apply(this, [dt]);
     };
 
-    Kulami.prototype.draw = function() {
+    BoardGame.prototype.draw = function() {
       var k, t, v, _i, _len, _ref, _ref1;
       atom.context.clear();
       _ref = this.tiles;
@@ -705,7 +731,7 @@ define(['core/tile', 'core/button', 'core/instructions', 'core/aistate', 'core/a
       return this.instructions.draw();
     };
 
-    return Kulami;
+    return BoardGame;
 
   })(atom.Game);
 });

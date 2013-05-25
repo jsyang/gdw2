@@ -7,7 +7,12 @@
                 window.location.href = 'http://localhost:8080';
             }
         </script>
-        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0 maximum-scale=1, user-scalable=no" />
+        <!-- for iOS web app -->
+        <meta name="viewport" content="initial-scale=0.72, maximum-scale=0.72, user-scalable=no" />
+        <link rel="apple-touch-icon" href="gfx/icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+        <META HTTP-EQUIV="Expires" CONTENT="-1">
         <style>
             body {
                 background: url('gfx/wood.jpg');
@@ -17,7 +22,12 @@
     <body><canvas></canvas></body>
     <script src="lib/require.js"></script>
     <script>
-      require.config({ paths : { 'text' : 'lib/text' } });
+      require.config({
+        paths : {
+          'text' : 'lib/text',
+          'howler' : 'lib/howler'
+        }
+      });
       require(['core/init']);
     </script>
 </html>

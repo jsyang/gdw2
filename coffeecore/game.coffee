@@ -6,7 +6,7 @@ define [
   'core/aiplayer'
 ], (MoveTile, Button, Instructions, AIState, AIPlayer) ->
     
-  class Kulami extends atom.Game
+  class BoardGame extends atom.Game
     
     getLayoutOrigin : ->
       minX  = Infinity
@@ -293,36 +293,36 @@ define [
     triggers : ######################################################################################
     
       movemade : (coord) ->
-          @user.tile.setOuterCell(coord.x, coord.y, @user.color)
-          @user.lastTile = @user.tile
-          @user.color++
-          if @user.color > 2 then @user.color = 1
-          @triggers.removehighlightbutton.apply(@)
-          @user.lastMove = coord
+        @user.tile.setOuterCell(coord.x, coord.y, @user.color)
+        @user.lastTile = @user.tile
+        @user.color++
+        if @user.color > 2 then @user.color = 1
+        @triggers.removehighlightbutton.apply(@)
+        @user.lastMove = coord
+        
+        @user.moves++
+        atom.playSound('crack')
+        @triggers.addhighlightbutton.apply(@)
+        
+        if !@checkIfPlayerHasMovesLeft()
+          @triggers.showgameover.call(@)
+          alert('No moves left for '+@user.COLORS[@user.color]+'!')
+          @triggers.calculatescores.call(@)
+        else
+          @triggers.showwhosturn.call(@)
           
-          @user.moves++
-          atom.playSound('crack')
-          @triggers.addhighlightbutton.apply(@)
-          
-          if !@checkIfPlayerHasMovesLeft()
-            @triggers.showgameover.call(@)
-            alert('No moves left for '+@user.COLORS[@user.color]+'!')
-            @triggers.calculatescores.call(@)
-          else
-            @triggers.showwhosturn.call(@)
-            
-            # Make sure the game is not over before we attempt an AI move
-            if @ai?
-              @aistate.updateBoard()
-              if @user.color is @ai.color
-                # taunt.
-                @aistate.calculateTauntBasedOnScore()
-                
-                # Make a move only after the turn's done.
-                # Randomize the computer's move time, since humans will believe
-                # the game is hard if the computer takes a long time to make his move.
-                
-                setTimeout((=> @ai.makeMove()), $$.R(200,900))
+          # Make sure the game is not over before we attempt an AI move
+          if @ai?
+            @aistate.updateBoard()
+            if @user.color is @ai.color
+              # taunt.
+              @aistate.calculateTauntBasedOnScore()
+              
+              # Make a move only after the turn's done.
+              # Randomize the computer's move time, since humans will believe
+              # the game is hard if the computer takes a long time to make his move.
+              
+              setTimeout((=> @ai.makeMove()), $$.R(200,900))
     
       showgameover : ->
         @instructions.set({ name : 'NEUTRAL_GAMEOVER' })
@@ -377,6 +377,7 @@ define [
         @buttons.fastForward = new Button({
           x : atom.width - 171
           y : atom.height - 60
+          hOffset : 171
           w : 61
           h : 50
           shape : 'image'
@@ -390,6 +391,7 @@ define [
         @buttons.rewind = new Button({
           x : atom.width - 242
           y : atom.height - 60
+          hOffset : 242
           w : 61
           h : 50
           shape : 'image'
@@ -527,6 +529,7 @@ define [
         @buttons.restart = new Button({
           x : atom.width - 10 - 136
           y : atom.height - 60
+          hOffset : 136
           w : 136
           h : 50
           shape : 'image'
@@ -536,7 +539,26 @@ define [
     
       reloadpage : ->
         window.location.reload()
+      
+      horizontalorientation : ->
+        @instructions.vOffset = 0
+        @triggers.reflowbuttons.call(@)
+        return
+      
+      verticalorientation : ->
+        @instructions.vOffset = 50
+        @triggers.reflowbuttons.call(@)
+        return
     
+      reflowbuttons : ->
+        (
+          if v.image?
+            v.x = atom.width - v.hOffset
+            v.y = atom.height - 60
+        ) for k,v of @buttons
+        return
+        
+        
     tiles : []
     
     buttons :
@@ -544,6 +566,7 @@ define [
       randomLayout : new Button({
         x : atom.width - 248
         y : atom.height - 60
+        hOffset : 248
         w : 138
         h : 50
         shape : 'image'
@@ -557,6 +580,7 @@ define [
       start : new Button({
         x : atom.width - 347
         y : atom.height - 60
+        hOffset : 347
         w : 90
         h : 50
         shape : 'image'
@@ -570,6 +594,7 @@ define [
       help : new Button({
         x : atom.width - 100
         y : atom.height - 60
+        hOffset : 100
         w : 89
         h : 50
         shape : 'image'
@@ -612,7 +637,8 @@ define [
       # initially, you can't play since the tiles are jumbled
       @triggers.disablestartbutton.call(@)
       
-      @instructions = new Instructions({ game : @ })
+      @instructions = new Instructions({ game : @, verticaloffset : 0 })
+
       
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])

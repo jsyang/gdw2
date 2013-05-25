@@ -175,10 +175,6 @@ define(function() {
     return atom.height = atom.canvas.height;
   };
   window.onresize();
-  window.onorientationchange = function(e) {
-    return atom.orientation = window.orientation;
-  };
-  window.onorientationchange();
   Game = (function() {
 
     function Game() {}

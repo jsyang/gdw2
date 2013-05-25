@@ -80,6 +80,8 @@ define(function() {
 
     Instructions.prototype.game = null;
 
+    Instructions.prototype.vOffset = 0;
+
     function Instructions(params) {
       var k, v;
       for (k in params) {
@@ -159,7 +161,7 @@ define(function() {
               i = 0;
               for (_i = 0, _len = text.length; _i < _len; _i++) {
                 l = text[_i];
-                ac.fillText(l.toUpperCase(), 10, atom.height - (20 * (text.length - i)));
+                ac.fillText(l.toUpperCase(), 10, atom.height - this.vOffset - (20 * (text.length - i)));
                 i++;
               }
               this.timer--;

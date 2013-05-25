@@ -63,7 +63,8 @@ define ->
     timer         : Infinity
     sequenceIndex : null
     
-    game : null # ref to parent game
+    game          : null  # ref to parent game
+    vOffset       : 0     # bottom margin
     
     constructor : (params) ->
       @[k] = v for k, v of params
@@ -142,7 +143,7 @@ define ->
               
               i = 0
               for l in text
-                ac.fillText(l.toUpperCase(), 10, atom.height-(20*(text.length-i)))
+                ac.fillText(l.toUpperCase(), 10, atom.height-@vOffset-(20*(text.length-i)))
                 i++
                 
               @timer--

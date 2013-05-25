@@ -2,11 +2,13 @@ define [
   'core/util'
   'core/atom'
   'core/game'
-], (_util, _atom, Kulami) ->
-
+  'core/mobileFeatures'
+], (_util, _atom, BoardGame, _mobile) ->
+  
   startGame = ->
-    window.q = new Kulami()
-    q.run()
+    window.game = new BoardGame()
+    window.game.run()
+    
   
   loaded =
     gfx : false
@@ -15,6 +17,10 @@ define [
   isPreloadComplete = ->
     if loaded.gfx and loaded.sfx
       startGame()
+      
+      if window.isMobile and window.orientation is 0
+        window.onorientationchange()
+        
       true
     else
       false

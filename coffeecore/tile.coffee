@@ -65,7 +65,7 @@ define ->
         
       if @finalTallied
         if @opacity > 0.3
-          @opacity -= 0.02
+          @opacity -= 0.05
         ac.globalAlpha = @opacity
       else
         rotationMagnitude = Math.abs(@rotation)

@@ -99,7 +99,7 @@ define(function() {
       ac.translate(c.x, c.y);
       if (this.finalTallied) {
         if (this.opacity > 0.3) {
-          this.opacity -= 0.02;
+          this.opacity -= 0.05;
         }
         ac.globalAlpha = this.opacity;
       } else {

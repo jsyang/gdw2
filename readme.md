@@ -3,6 +3,8 @@
 Original development finished on 30/05/2013. Current version has been patched to
 run in modern browsers (WebAudio API was changed since 2013).
 
+#### [Play it online now!](http://jsyang.ca/gdw2)
+
 ## Game
 This is a web version of a popular board game: [Kulami](https://boardgamegeek.com/boardgame/108831/kulami)
 
@@ -10,6 +12,8 @@ Features:
 - an intermediate skill-level AI player with taunts (filthy meatbag!)
 - RANDOM or a completely user-defined board layout
 - final score breakdown
+
+![](screenshot.png)
 
 ## How to play
 

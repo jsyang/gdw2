@@ -260,8 +260,10 @@ define(function() {
     }
     return _results;
   };
-  atom.audioContext = typeof webkitAudioContext === "function" ? new webkitAudioContext() : void 0;
-  atom._mixer = (_ref = atom.audioContext) != null ? _ref.createGainNode() : void 0;
+
+  // Patch to make game compatible with modern WebAudio API
+  atom.audioContext = AudioContext? new AudioContext() : void 0;
+  atom._mixer = (_ref = atom.audioContext) != null ? _ref.createGain() : void 0;
   if ((_ref1 = atom._mixer) != null) {
     _ref1.connect(atom.audioContext.destination);
   }
@@ -330,7 +332,7 @@ define(function() {
     source = atom.audioContext.createBufferSource();
     source.buffer = atom.sfx[name];
     source.connect(atom._mixer);
-    source.noteOn(time);
+    source.start(time);
     if (track) {
       atom._mixer._activeSounds.push(source);
     }
